@@ -19,8 +19,8 @@
 # Change the file extension to match the format (.xml for XML, etc...)
 #
 ###
-title: "TODO - Your title"
-abbrev: "TODO - Abbreviation"
+title: "STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting"
+abbrev: "STAR"
 category: info
 
 docname: draft-todo-yourname-protocol-latest
