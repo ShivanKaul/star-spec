@@ -2,16 +2,13 @@
 
 This is the working area for the individual Internet-Draft, "STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting".
 
-* [Editor's Copy](https://ShivanKaul.github.io/star-internet-draft/#go.draft-sahib-star.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-sahib-star)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-sahib-star)
-* [Compare Editor's Copy to Individual Draft](https://ShivanKaul.github.io/star-internet-draft/#go.draft-sahib-star.diff)
+* [Editor's Copy](https://ShivanKaul.github.io/star-internet-draft/#go.draft-star.html)
+* [Datatracker Page](https://datatracker.ietf.org/doc/draft-star)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-star)
+* [Compare Editor's Copy to Individual Draft](https://ShivanKaul.github.io/star-internet-draft/#go.draft-star.diff)
 
 
 ## Contributing
-
-See the
-[guidelines for contributions](https://github.com/ShivanKaul/star-internet-draft/blob//CONTRIBUTING.md).
 
 Contributions can be made by creating pull requests.
 The GitHub interface supports creating pull requests using the Edit (✏) button.
