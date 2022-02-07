@@ -21,19 +21,33 @@ normative:
 
 informative:
 
+  STAR:
+    title: "STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting"
+    date: 2021-12-08
+    target: "https://arxiv.org/abs/2109.10074"
+    author:
+      - ins: A. Davidson
+      - ins: P. Snyder
+      - ins: E. Quirk
+      - ins: J. Genereux
+      - ins: B. Livshits
+      
+  Brave:
+    title: Brave Browser
+    target: https://brave.com
 
 --- abstract
 
-Servers often need to collect data from clients that can be privacy-sensitive if the server is able to associate the collected data with a particular user. Distributed Secret Sharing for Private Threshold Aggregation Reporting (STAR) is an efficient and secure threshold aggregation protocol for collecting measurements from clients by an untrusted server while maintaining k-anonymity guarantees.
+Servers often need to collect data from clients that can be privacy-sensitive if the server is able to associate the collected data with a particular user. In this document we describe STAR, an efficient and secure threshold aggregation protocol for collecting measurements from clients by an untrusted server while maintaining k-anonymity guarantees.
 
 
 --- middle
 
 # Introduction
 
-Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for e.g. if the client is using the Tor [] network or Oblivious HTTP []), it's possible for the collected data to be unique enough that the user's identity is leaked. [TODO example]. A common solution to this problem of the measurement being user-identifying/sensitive is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems [].
+Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for e.g. if the client is using the Tor network or {{!OHTTP=I-D.thomson-http-oblivious}}), it's possible for the collected data to be unique enough that the user's identity is leaked. A common solution to this problem of the measurement being user-identifying/sensitive is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems [].
 
-In this document we describe one such system, namely STAR [], that is currently deployed in production by the Brave browser []. This document describes the single-server model, where we assume that the client input space is sufficiently-random (see {{security-considerations}}).
+In this document we describe one such system, namely Distributed Secret Sharing for Private Threshold Aggregation Reporting (STAR) {{STAR}}, that is currently deployed in production by the {{Brave}} browser. This document describes the single-server model, where we assume that the client input space is sufficiently-random (see {{security-considerations}}).
 
 # Conventions and Definitions
 
