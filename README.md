@@ -2,11 +2,7 @@
 
 This is the working area for the individual Internet-Draft, "STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting".
 
-* [Editor's Copy](https://ShivanKaul.github.io/star-internet-draft/#go.draft-star.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-star)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-star)
-* [Compare Editor's Copy to Individual Draft](https://ShivanKaul.github.io/star-internet-draft/#go.draft-star.diff)
-
+* [Editor's Copy](https://ShivanKaul.github.io/star-spec/#go.draft-star.html)
 
 ## Contributing
 
