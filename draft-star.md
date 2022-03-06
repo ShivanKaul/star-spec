@@ -23,7 +23,7 @@ author:
  -
     name: "Peter Snyder"
     organization: Brave Software
-    email: "todo@todo.com"
+    email: "pes@brave.com"
 
 normative:
 
