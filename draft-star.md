@@ -38,6 +38,15 @@ informative:
       - ins: E. Quirk
       - ins: J. Genereux
       - ins: B. Livshits
+  Tor:
+    title: "Tor: The Second-Generation Onion Router" 
+    date: 2004
+    target: "https://svn-archive.torproject.org/svn/projects/design-paper/tor-design.pdf"
+    author:
+      - ins: R. Dingledine
+      - ins: N. Mathewson
+      - ins: P. Syverson
+      
   Brave:
     title: Brave Browser
     target: https://brave.com
@@ -70,7 +79,7 @@ Servers often need to collect data from clients that can be privacy-sensitive if
 
 # Introduction
 
-Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for e.g. if the client is using the Tor network or {{?OHTTP=I-D.thomson-http-oblivious}}), it's possible for the collected data to be unique enough that the user's identity is leaked. A common solution to this problem of the measurement being user-identifying/sensitive is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems.
+Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for e.g. if the client is using the {{Tor}} network or {{?OHTTP=I-D.thomson-http-oblivious}}, it's possible for the collected data to be unique enough that the user's identity is leaked. A common solution to this problem of the measurement being user-identifying/sensitive is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems.
 
 In this document we describe one such system, namely Distributed Secret Sharing for Private Threshold Aggregation Reporting (STAR) {{STAR}}, that is currently deployed in production by the {{Brave}} browser. 
 
@@ -199,7 +208,7 @@ Clients SHOULD ensure that their message submission is detached from their ident
 
 ## Leakage
 
-Client messages immediately leak the size of the anonymity set for each received measurement, even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}}) proxy, then the leakage derived from the anonymity sets themselves is significantly reduced.
+Client messages immediately leak the size of the anonymity set for each received measurement, even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced.
 
 # IANA Considerations
 
