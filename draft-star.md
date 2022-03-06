@@ -195,7 +195,7 @@ For further security enhancements, clients MAY sample their randomness in epoch 
 
 ## Oblivious Submission
 
-Clients SHOULD ensure that their message submission is detached from their identity. This is to ensure that the aggregation server does not learn exactly what each client submits, in the event that their measurement is revealed. This can be achieved by having the clients submit their messages via an {{?OHTTP=I-D.thomson-http-oblivious}}) proxy. Note that the OHTTP proxy and randomness server can be combined into a single entity, since client messages are protected by a TLS connection between the client and the aggregation server.
+Clients SHOULD ensure that their message submission is detached from their identity. This is to ensure that the aggregation server does not learn exactly what each client submits, in the event that their measurement is revealed. This can be achieved by having the clients submit their messages via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy. Note that the OHTTP proxy and randomness server can be combined into a single entity, since client messages are protected by a TLS connection between the client and the aggregation server.
 
 ## Leakage
 
