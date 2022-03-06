@@ -13,9 +13,17 @@ pi: [toc, sortrefs, symrefs]
 
 author:
  -
+    name: "Alex Davidson"
+    organization: Brave Software
+    email: "todo@todo.com"
+ -
     name: "Shivan Kaul Sahib"
     organization: Brave Software
     email: "shivankaulsahib@gmail.com"
+ -
+    name: "Peter Snyder"
+    organization: Brave Software
+    email: "todo@todo.com"
 
 normative:
 
