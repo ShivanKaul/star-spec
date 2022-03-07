@@ -15,7 +15,7 @@ author:
  -
     name: "Alex Davidson"
     organization: Brave Software
-    email: "todo@todo.com"
+    email: "alex.davidson92@gmail.com"
  -
     name: "Shivan Kaul Sahib"
     organization: Brave Software
