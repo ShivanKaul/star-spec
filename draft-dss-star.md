@@ -102,7 +102,7 @@ Message:
 : The encrypted measurement being sent by the client.
 
 Auxiliary Data:
-: Arbitrary data that clients may send as part of their message, but which is not included in any security measures.
+: Arbitrary data that clients may send as part of their message, but which is only revealed when at least K encrypted measurements of the same value are received.
 
 # System Overview
 
@@ -144,6 +144,10 @@ The overall system architecture is shown in {{arch}}, where x is the measurement
 
 The main goal in the STAR protocol is to have the aggregation performed by a single untrusted server, without requiring communication with any other non-colluding entities. In order for the aggregation to succeed, clients must send messages that are consistent with other client messages. This requires sampling randomness that is equivalent when clients share the same measurement.
 
+## Auxiliary data
+
+In {{arch}}, `aux` refers to auxiliary or additional data that may be sent by clients, and is distinct from the measurement data protected by the K-anonymity guarantee. Auxiliary data is only revealed when the k-condition is met but, importantly, is not part of the k-condition itself. This data might be unique to some or all of the submissions, or omitted entirely. This can even be the actual measured value itself. For example: if we're measuring tabs open on a client, then the measurement being sent can be "city: Vancouver" and the aux data can be "7" for a particular client. The idea being, that we only reveal all the measurements once we know that there are at least K clients with city: Vancouver.
+
 ## Randomness sampling
 
 The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. Either the client MAY sample the randomness directly by computing a randomness extractor over their measurement, or they MAY sample it as the output of an exchange with a separate server that implements a partially oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}}}. We discuss both cases more throughly in {{sec-randomness-sampling}}.
@@ -184,6 +188,10 @@ STAR is similar in nature to private heavy-hitter discovery protocols, such as P
 ## General Aggregation
 
 In comparison to general aggregation protocols like Prio {{?Prio=I-D.draft-gpew-priv-ppm}}, the STAR protocol provides a more constrained set of functionality. However, STAR is significantly more efficient for the threshold aggregation functionality, requires only a single aggregation server, and is not limited to only processing numerical data types.
+
+## Support for auxiliary data
+
+It should be noted that clients can send auxiliary data ({{auxiliary-data}}) that is revealed only when the aggregation including their measurement succeeds (i.e. K-1 other clients send the same value). Such data is supported by neither Prio, nor Poplar.
 
 # Security Considerations {#security-considerations}
 
