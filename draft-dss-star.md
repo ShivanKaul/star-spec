@@ -212,7 +212,7 @@ Clients SHOULD ensure that their message submission is detached from their ident
 
 ## Leakage
 
-Client messages immediately leak the size of the anonymity set for each received measurement (i.e. which clients share the same measurement), even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are not likely to lead to deanonymization of clients or their data.
+Client messages immediately leak the size of the anonymity set for each received measurement (i.e. which clients share the same measurement), even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are likely to lead to deanonymization of clients or their data.
 
 # IANA Considerations
 
