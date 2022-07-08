@@ -79,7 +79,7 @@ Servers often need to collect data from clients that can be privacy-sensitive if
 
 # Introduction
 
-Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for e.g. if the client is using the {{Tor}} network or {{?OHTTP=I-D.thomson-http-oblivious}}, it's possible for the collected data to be unique enough that the user's identity is leaked. A common solution to this problem of the measurement being user-identifying/sensitive is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems.
+Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for example, if the client is using the {{Tor}} network or {{?OHTTP=I-D.thomson-http-oblivious}}), it's possible for the collected data to be unique enough that the user's identity is leaked. A common solution to this problem of the measurement being user-identifying/sensitive is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems.
 
 In this document we describe one such system, namely Distributed Secret Sharing for Private Threshold Aggregation Reporting (STAR) {{STAR}}, that is currently deployed in production by the {{Brave}} browser.
 
@@ -102,7 +102,7 @@ Message:
 : The encrypted measurement being sent by the client.
 
 Auxiliary Data:
-: Arbitrary data that clients may send as part of their message, but which is not included in any security measures.
+: Arbitrary data that clients may send as part of their message, but which is only revealed when at least K encrypted measurements of the same value are received.
 
 # System Overview
 
@@ -143,6 +143,10 @@ The overall system architecture is shown in {{arch}}, where x is the measurement
 <!--- https://textik.com/#825ddce1208e2bc3 -->
 
 The main goal in the STAR protocol is to have the aggregation performed by a single untrusted server, without requiring communication with any other non-colluding entities. In order for the aggregation to succeed, clients must send messages that are consistent with other client messages. This requires sampling randomness that is equivalent when clients share the same measurement.
+
+## Auxiliary data
+
+In {{arch}}, `aux` refers to auxiliary or additional data that may be sent by clients, and is distinct from the measurement data protected by the K-anonymity guarantee. Auxiliary data is only revealed when the k-condition is met but, importantly, is not part of the k-condition itself. This data might be unique to some or all of the submissions, or omitted entirely. This can even be the actual measured value itself. For example: if we're measuring tabs open on a client, then the measurement being sent can be "city: Vancouver" and the aux data can be "7" for a particular client. The idea being, that we only reveal all the measurements once we know that there are at least K clients with city: Vancouver.
 
 ## Randomness sampling
 
@@ -189,6 +193,10 @@ In comparison to general aggregation protocols like Prio {{?Prio=I-D.draft-gpew-
 
 As we discuss in {{leakage}}, STAR leaks which (and how many) clients share the same measurements, even if the measurements themselves are not revealed. The leakage of Prio is defined as whatever is leaked by the function that the aggregation computes. The leakage in Poplar allows the two aggregation servers to learn all heavy-hitting prefixes of the eventual heavy-hitting strings that are output. Depending on the nature of the aggregation, it may be possible to utilize this leakage to harm the privacy of clients and client data that is included in the aggregation.
 
+## Support for auxiliary data
+
+It should be noted that clients can send auxiliary data ({{auxiliary-data}}) that is revealed only when the aggregation including their measurement succeeds (i.e. K-1 other clients send the same value). Such data is supported by neither Prio, nor Poplar.
+
 # Security Considerations {#security-considerations}
 
 ## Randomness Sampling {#sec-randomness-sampling}
@@ -197,7 +205,9 @@ If clients sample randomness from their measurement directly, then security of t
 
 For better security guarantees, it is RECOMMENDED that clients sample their randomness as part of an interaction with an independent entity (AKA `randomness server`) running a partially oblivious pseudorandom function protocol. In such an exchange, the client submits their measurement as input, and learns `rand = POPRF(sk,x;t)` as the randomness, where `sk` is the POPRF secret key, and `t` is public metadata that dictates the current epoch. Sampling randomness in this way restricts the aggregation server to only being able to run the previous attack as an online interaction with the randomness server.
 
-For further security enhancements, clients MAY sample their randomness in epoch `t` and then send it to the aggregation server in `t+1` (after the randomness server has rotated their secret key). This prevents the aggregation server from being after receiving the client messages, which shortens the window of the attack. In addition, the original STAR paper {{STAR}} details potential constructions of POPRF protocols that allow puncturing epoch metadata tags, which prevents the need for the randomness server to perform a full key rotation.
+For further security enhancements, clients SHOULD sample their randomness in epoch `t` and then send it to the aggregation server in `t+1` (after the randomness server has rotated their secret key). This prevents the aggregation server from being after receiving the client messages, which shortens the window of the attack. It is also RECOMMENDED that the randomness server runs in verifiable mode, which allows clients to verify the randomness that they are being served {{!OPRF=I-D.irtf-cfrg-voprf}}.
+
+An alternative to using a partially oblivious pseudorandom function protocol is to instead use a standard verifiable OPRF (VOPRF), and ensure that a fresh key is sampled and used in each epoch `t`. Keys for previous epochs can be safely deleted. Deleting keys in this way reduces the window in which corruption of the randomness server by the aggregation server can harm previous client submissions (i.e. providing forward-secrecy).
 
 ## Cryptographic Choices
 
