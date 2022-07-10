@@ -30,13 +30,14 @@ normative:
 informative:
   STAR:
     title: "STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting"
-    date: 2021-12-08
+    date: 2022-04-10
     target: "https://arxiv.org/abs/2109.10074"
     author:
       - ins: A. Davidson
       - ins: P. Snyder
       - ins: E. Quirk
       - ins: J. Genereux
+      - ins: H. Haddadi
       - ins: B. Livshits
   Tor:
     title: "Tor: The Second-Generation Onion Router"
