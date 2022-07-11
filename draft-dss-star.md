@@ -189,6 +189,10 @@ STAR is similar in nature to private heavy-hitter discovery protocols, such as P
 
 In comparison to general aggregation protocols like Prio {{?Prio=I-D.draft-gpew-priv-ppm}}, the STAR protocol provides a more constrained set of functionality. However, STAR is significantly more efficient for the threshold aggregation functionality, requires only a single aggregation server, and is not limited to only processing numerical data types.
 
+## Protocol leakage
+
+As we discuss in {{leakage}}, STAR leaks which (and how many) clients share the same measurements, even if the measurements themselves are not revealed. The leakage of Prio is defined as whatever is leaked by the function that the aggregation computes. The leakage in Poplar allows the two aggregation servers to learn all heavy-hitting prefixes of the eventual heavy-hitting strings that are output. Depending on the nature of the aggregation, it may be possible to utilize this leakage to harm the privacy of clients and client data that is included in the aggregation.
+
 ## Support for auxiliary data
 
 It should be noted that clients can send auxiliary data ({{auxiliary-data}}) that is revealed only when the aggregation including their measurement succeeds (i.e. K-1 other clients send the same value). Such data is supported by neither Prio, nor Poplar.
@@ -218,7 +222,7 @@ Clients SHOULD ensure that their message submission is detached from their ident
 
 ## Leakage
 
-Client messages immediately leak the size of the anonymity set for each received measurement, even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced.
+Client messages immediately leak the size of the anonymity set for each received measurement (i.e. which clients share the same measurement), even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are likely to lead to deanonymization of clients or their data.
 
 # IANA Considerations
 
