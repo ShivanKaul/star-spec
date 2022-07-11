@@ -150,7 +150,7 @@ In {{arch}}, `aux` refers to auxiliary or additional data that may be sent by cl
 
 ## Randomness sampling
 
-The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. Either the client MAY sample the randomness directly by computing a randomness extractor over their measurement, or they MAY sample it as the output of an exchange with a separate server that implements a partially oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}}}. We discuss both cases more throughly in {{sec-randomness-sampling}}.
+The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. Either the client MAY sample the randomness directly by computing a randomness extractor over their measurement, or they MAY sample it as the output of an exchange with a separate server that implements a partially oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}}}. We discuss both cases more thoroughly in {{sec-randomness-sampling}}.
 
 ## Measurement Encryption
 
@@ -218,7 +218,11 @@ An alternative to using a partially oblivious pseudorandom function protocol is 
 
 ## Oblivious Submission
 
-Clients SHOULD ensure that their message submission is detached from their identity. This is to ensure that the aggregation server does not learn exactly what each client submits, in the event that their measurement is revealed. This can be achieved by having the clients submit their messages via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy. Note that the OHTTP proxy and randomness server can be combined into a single entity, since client messages are protected by a TLS connection between the client and the aggregation server.
+Clients SHOULD ensure that their message submission is detached from their identity. This is to ensure that the aggregation server does not learn exactly what each client submits, in the event that their measurement is revealed. This can be achieved by having the clients submit their messages via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy. In this flow, the aggregation server is configured as the "target resource", and a separate "proxy resource" entity must be configured that proxy client STAR messages using the OHTTP framework. Note that collusion between the aggregation server and the OHTTP proxy is expressly forbidden.
+
+Note that the OHTTP proxy resource and randomness server can be combined into a single entity, since client messages are protected by a TLS connection between the client and the aggregation server. Therefore, OHTTP support can be enabled without requiring any additional non-colluding parties. Essentially, this means that the randomness server must allow two endpoints: (1) to evaluate the VOPRF functionality that provides clients with randomness, and (2) to proxy client messages to the aggregation server.
+
+It should also be noted that client messages could be sent via existing anonymizing proxies, such as {{Tor}}, but the OHTTP solution is likely to be the most efficient way to achieve this.
 
 ## Leakage
 
