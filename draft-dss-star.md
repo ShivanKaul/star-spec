@@ -151,7 +151,7 @@ In {{arch}}, `aux` refers to auxiliary or additional data that may be sent by cl
 
 ## Randomness sampling
 
-The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. The client MUST sample randomness as the output of an exchange with a separate server that implements a oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}} (running in verifiable mode, i.e. a VOPRF). 
+The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. The client MUST sample randomness as the output of an exchange with a separate server that implements a oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}} (running in verifiable mode, i.e. a VOPRF).
 
 Note that the randomness server in STAR does not need to be purposely configured, providing that clients all have a consistent service that operates a VOPRF-as-a-service, in line with the functionality explained in {{!OPRF=I-D.irtf-cfrg-voprf}}.
 
