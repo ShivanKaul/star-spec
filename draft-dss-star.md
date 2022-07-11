@@ -205,9 +205,9 @@ It should be noted that clients can send auxiliary data ({{auxiliary-data}}) tha
 
 ## Randomness Sampling {#sec-randomness-sampling}
 
-Deterministic randomness MUST be sampled by clients to construct their STAR message, as discussed in {{client-message}}. This randomness CANNOT be derived locally, and MUST be sampled from the randomness server (that runs a {{!OPRF=I-D.irtf-cfrg-voprf}} service).
+Deterministic randomness MUST be sampled by clients to construct their STAR message, as discussed in {{client-message}}. This randomness CANNOT be derived locally, and MUST be sampled from the randomness server (that runs an {{!OPRF=I-D.irtf-cfrg-voprf}} service).
 
-For best-possible security, the randomness server SHOULD sample and use a new OPRF key for each time epoch `t`, where the length of epochs is determined by the application. The previous OPRF key that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter epochs provide more client security,but also reduce the window in which data collection occurs.
+For best-possible security, the randomness server SHOULD sample and use a new OPRF key for each time epoch `t`, where the length of epochs is determined by the application. The previous OPRF key that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter epochs provide more client security, but also reduce the window in which data collection occurs.
 
 In this model, for further security, clients SHOULD sample their randomness in epoch `t` and then send it to the aggregation server in `t+1` (after the randomness server has rotated their secret key). This prevents the aggregation server from launching queries after receiving the client messages ({{leakage}}). It is also RECOMMENDED that the randomness server runs in verifiable mode, which allows clients to verify the randomness that they are being served {{!OPRF=I-D.irtf-cfrg-voprf}}.
 
