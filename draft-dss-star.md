@@ -150,9 +150,11 @@ In {{arch}}, `aux` refers to auxiliary or additional data that may be sent by cl
 
 ## Randomness sampling
 
-The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. Either the client MAY sample the randomness directly by computing a randomness extractor over their measurement, or they MAY sample it as the output of an exchange with a separate server that implements a partially oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}}}. We discuss both cases more thoroughly in {{sec-randomness-sampling}}.
+The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. The client MUST sample randomness as the output of an exchange with a separate server that implements a oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}} (running in verifiable mode, i.e. a VOPRF). 
 
-## Measurement Encryption
+Note that the randomness server in STAR does not need to be purposely configured, providing that clients all have a consistent service that operates a VOPRF-as-a-service, in line with the functionality explained in {{!OPRF=I-D.irtf-cfrg-voprf}}.
+
+## Measurement Encryption {#client-message}
 
 The client measurement encryption process involves the following steps.
 
@@ -183,7 +185,9 @@ The server computes the output of the aggregation by performing the following st
 
 ## Private Heavy-Hitter Discovery
 
-STAR is similar in nature to private heavy-hitter discovery protocols, such as Poplar {{Poplar}}. In such systems, the aggregation server reveals the set of client measurements that are shared by at least K clients. The STAR protocol is orders of magnitude more efficient than the Poplar approach, with respect to computational, network-usage, and financial metrics. Therefore, STAR scales much better for large numbers of client submissions. Moreover, STAR allows a single untrusted server to perform the aggregation process, as opposed to Poplar which requires two non-colluding servers.
+STAR is similar in nature to private heavy-hitter discovery protocols, such as Poplar {{Poplar}}. In such systems, the aggregation server reveals the set of client measurements that are shared by at least K clients. STAR allows a single untrusted server to perform the aggregation process, as opposed to Poplar which requires two non-colluding servers that communicate with each other.
+
+As a consequence, the STAR protocol is orders of magnitude more efficient than the Poplar approach, with respect to computational, network-usage, and financial metrics. Therefore, STAR scales much better for large numbers of client submissions. See the {{STAR}} paper for more details on efficiency comparisons with the Poplar approach.
 
 ## General Aggregation
 
@@ -191,7 +195,11 @@ In comparison to general aggregation protocols like Prio {{?Prio=I-D.draft-gpew-
 
 ## Protocol leakage
 
-As we discuss in {{leakage}}, STAR leaks which (and how many) clients share the same measurements, even if the measurements themselves are not revealed. The leakage of Prio is defined as whatever is leaked by the function that the aggregation computes. The leakage in Poplar allows the two aggregation servers to learn all heavy-hitting prefixes of the eventual heavy-hitting strings that are output. Depending on the nature of the aggregation, it may be possible to utilize this leakage to harm the privacy of clients and client data that is included in the aggregation.
+As we discuss in {{leakage}}, STAR leaks deterministic tags derived from the client measurement that reveal which (and how many) clients share the same measurements, even if the measurements themselves are not revealed. This also enables an online dictionary attack to be launched by the aggregation server by sending repeated VOPRF queries to the randomness server.
+
+The leakage of Prio is defined as whatever is leaked by the function that the aggregation computes. The leakage in Poplar allows the two aggregation servers to learn all heavy-hitting prefixes of the eventual heavy-hitting strings that are output. Note that in Poplar it is also possible to launch dictionary attacks of a similar nature to STAR by launching a Sybil attack that explicitly injects multiple measurements that share the same prefix into the aggregation. This attack would result in the aggregation process learning more about client inputs that share those prefixes.
+
+Finally, note that under collusion, the STAR security model requires the adversary to launch an offline dictionary attack against client measurements. In Prio and Poplar, security is immediately lost when collusion occurs.
 
 ## Support for auxiliary data
 
@@ -201,13 +209,11 @@ It should be noted that clients can send auxiliary data ({{auxiliary-data}}) tha
 
 ## Randomness Sampling {#sec-randomness-sampling}
 
-If clients sample randomness from their measurement directly, then security of the encryption process is dependent on the amount of entropy in the measurement input space. In other words, it is crucial for the privacy guarantees provided by this protocol that the aggregation server cannot simply iterate over all possible encrypted values and generate the K values needed to decrypt a given client's measurement. If this requirement does not hold, then the server can do this easily by locally evaluating the randomness derivation process on multiple measurements.
+Deterministic randomness MUST be sampled by clients to construct their STAR message, as discussed in {{client-message}}. This randomness CANNOT be derived locally, and MUST be sampled from the randomness server (that runs an {{!OPRF=I-D.irtf-cfrg-voprf}} service).
 
-For better security guarantees, it is RECOMMENDED that clients sample their randomness as part of an interaction with an independent entity (AKA `randomness server`) running a partially oblivious pseudorandom function protocol. In such an exchange, the client submits their measurement as input, and learns `rand = POPRF(sk,x;t)` as the randomness, where `sk` is the POPRF secret key, and `t` is public metadata that dictates the current epoch. Sampling randomness in this way restricts the aggregation server to only being able to run the previous attack as an online interaction with the randomness server.
+For best-possible security, the randomness server SHOULD sample and use a new OPRF key for each time epoch `t`, where the length of epochs is determined by the application. The previous OPRF key that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter epochs provide more client security, but also reduce the window in which data collection occurs.
 
-For further security enhancements, clients SHOULD sample their randomness in epoch `t` and then send it to the aggregation server in `t+1` (after the randomness server has rotated their secret key). This prevents the aggregation server from being after receiving the client messages, which shortens the window of the attack. It is also RECOMMENDED that the randomness server runs in verifiable mode, which allows clients to verify the randomness that they are being served {{!OPRF=I-D.irtf-cfrg-voprf}}.
-
-An alternative to using a partially oblivious pseudorandom function protocol is to instead use a standard verifiable OPRF (VOPRF), and ensure that a fresh key is sampled and used in each epoch `t`. Keys for previous epochs can be safely deleted. Deleting keys in this way reduces the window in which corruption of the randomness server by the aggregation server can harm previous client submissions (i.e. providing forward-secrecy).
+In this model, for further security, clients SHOULD sample their randomness in epoch `t` and then send it to the aggregation server in `t+1` (after the randomness server has rotated their secret key). This prevents the aggregation server from launching queries after receiving the client messages ({{leakage}}). It is also RECOMMENDED that the randomness server runs in verifiable mode, which allows clients to verify the randomness that they are being served {{!OPRF=I-D.irtf-cfrg-voprf}}.
 
 ## Cryptographic Choices
 
@@ -224,9 +230,13 @@ Note that the OHTTP proxy resource and randomness server MAY be combined into a 
 
 It should also be noted that client messages CAN be sent via existing anonymizing proxies, such as {{Tor}}, but the OHTTP solution is likely to be the most efficient way to achieve this.
 
-## Leakage
+## Leakage and Failure Model {#leakage}
 
-Client messages immediately leak the size of the anonymity set for each received measurement (i.e. which clients share the same measurement), even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are likely to lead to deanonymization of clients or their data.
+Client messages immediately leak deterministic tags that are derived from the VOPRF output that is evaluated over client measurement. This has the immediate impact that the size of the anonymity set for each received measurement (i.e. which clients share the same measurement), even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are likely to lead to deanonymization of clients or their data.
+
+A second impact is thus that the aggregation server may attempt to launch a dictionary attack against the client measurement, by repeatedly launching queries against the VOPRF server for measurements of its choice. This is mitigated by the fact that the randomness server regularly rotates the VOPRF key that they use, which reduces the window in which this attack can be launched ({{sec-randomness-sampling}}). Note that such attacks can also be limited in scope by maintaining out-of-band protections against entities that attempt to launch large numbers of queries in short time periods.
+
+Finally, note that if the aggregation and randomness servers collude and jointly learn the VOPRF key, then the attack above essentially becomes an offline dictionary attack. As such, client security is not completely lost when collusion occurs, which represents a safer mode of failure when compared with Prio and Poplar.
 
 # IANA Considerations
 
