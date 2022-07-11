@@ -191,7 +191,11 @@ In comparison to general aggregation protocols like Prio {{?Prio=I-D.draft-gpew-
 
 ## Protocol leakage
 
-As we discuss in {{leakage}}, STAR leaks which (and how many) clients share the same measurements, even if the measurements themselves are not revealed. The leakage of Prio is defined as whatever is leaked by the function that the aggregation computes. The leakage in Poplar allows the two aggregation servers to learn all heavy-hitting prefixes of the eventual heavy-hitting strings that are output. Depending on the nature of the aggregation, it may be possible to utilize this leakage to harm the privacy of clients and client data that is included in the aggregation.
+As we discuss in {{leakage}}, STAR leaks deterministic tags derived from the client measurement that reveal which (and how many) clients share the same measurements, even if the measurements themselves are not revealed. This also enables an online dictionary attack to be launched by the aggregation server by sending repeated VOPRF queries to the randomness server.
+
+The leakage of Prio is defined as whatever is leaked by the function that the aggregation computes. The leakage in Poplar allows the two aggregation servers to learn all heavy-hitting prefixes of the eventual heavy-hitting strings that are output. Depending on the nature of the aggregation, it may be possible to utilize this leakage to harm the privacy of clients and client data that is included in the aggregation. Note that in Poplar it is also possible to launch dictionary attacks of a similar nature to STAR by launching a Sybil attack that explicitly injects multiple measurements that share the same prefix, in an attempt to learn more about client inputs that share those prefixes.
+
+Finally, note that under collusion, the STAR security model requires the adversary to launch an offline dictionary attack against client measurements. In Prio and Poplar, security is immediately lost.
 
 ## Support for auxiliary data
 
@@ -220,9 +224,13 @@ An alternative to using a partially oblivious pseudorandom function protocol is 
 
 Clients SHOULD ensure that their message submission is detached from their identity. This is to ensure that the aggregation server does not learn exactly what each client submits, in the event that their measurement is revealed. This can be achieved by having the clients submit their messages via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy. Note that the OHTTP proxy and randomness server can be combined into a single entity, since client messages are protected by a TLS connection between the client and the aggregation server.
 
-## Leakage
+## Leakage and Failure Model {#leakage}
 
-Client messages immediately leak the size of the anonymity set for each received measurement (i.e. which clients share the same measurement), even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are likely to lead to deanonymization of clients or their data.
+Client messages immediately leak deterministic tags that are derived from the VOPRF output that is evaluated over client measurement. This has the immediate impact that the size of the anonymity set for each received measurement (i.e. which clients share the same measurement), even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} proxy, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are likely to lead to deanonymization of clients or their data.
+
+A second impact is thus that the aggregation server may attempt to launch a dictionary attack against the client measurement, by repeatedly launching queries against the VOPRF server for measurements of its choice. This is mitigated by the fact that the randomness server regularly rotates the VOPRF key that they use, which reduces the window in which this attack can be launched. Note that such attacks can also be limited in scope by maintaining out-of-band protections against entities that attempt to launch large numbers of queries in short time periods.
+
+Finally, note that if the aggregation and randomness servers collude and jointly learn the VOPRF key, then the attack above essentially becomes an offline dictionary attack. As such, client security is not completely lost when collusion occurs, which represents a safer mode of failure when compared with Prio and Poplar.
 
 # IANA Considerations
 
