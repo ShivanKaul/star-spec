@@ -150,9 +150,11 @@ In {{arch}}, `aux` refers to auxiliary or additional data that may be sent by cl
 
 ## Randomness sampling
 
-The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. Either the client MAY sample the randomness directly by computing a randomness extractor over their measurement, or they MAY sample it as the output of an exchange with a separate server that implements a partially oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}}}. We discuss both cases more throughly in {{sec-randomness-sampling}}.
+The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. Either the client MAY sample the randomness directly by computing a randomness extractor over their measurement, or they MAY sample it as the output of an exchange with a separate server that implements a oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}} (running in verifiable mode, i.e. a VOPRF). We discuss both cases more throughly in {{sec-randomness-sampling}}.
 
-## Measurement Encryption
+Note that the randomness server in STAR does not need to be purposely configured, providing that clients all have a consistent service that operates a VOPRF-as-a-service, in line with the functionality explained in {{!OPRF=I-D.irtf-cfrg-voprf}}.
+
+## Measurement Encryption {#client-message}
 
 The client measurement encryption process involves the following steps.
 
@@ -183,7 +185,9 @@ The server computes the output of the aggregation by performing the following st
 
 ## Private Heavy-Hitter Discovery
 
-STAR is similar in nature to private heavy-hitter discovery protocols, such as Poplar {{Poplar}}. In such systems, the aggregation server reveals the set of client measurements that are shared by at least K clients. The STAR protocol is orders of magnitude more efficient than the Poplar approach, with respect to computational, network-usage, and financial metrics. Therefore, STAR scales much better for large numbers of client submissions. Moreover, STAR allows a single untrusted server to perform the aggregation process, as opposed to Poplar which requires two non-colluding servers.
+STAR is similar in nature to private heavy-hitter discovery protocols, such as Poplar {{Poplar}}. In such systems, the aggregation server reveals the set of client measurements that are shared by at least K clients. STAR allows a single untrusted server to perform the aggregation process, as opposed to Poplar which requires two non-colluding servers that communicate with each other.
+
+As a consequence, the STAR protocol is orders of magnitude more efficient than the Poplar approach, with respect to computational, network-usage, and financial metrics. Therefore, STAR scales much better for large numbers of client submissions. See the {{STAR}} paper for more details on efficiency comparisons with the Poplar approach.
 
 ## General Aggregation
 
@@ -201,13 +205,11 @@ It should be noted that clients can send auxiliary data ({{auxiliary-data}}) tha
 
 ## Randomness Sampling {#sec-randomness-sampling}
 
-If clients sample randomness from their measurement directly, then security of the encryption process is dependent on the amount of entropy in the measurement input space. In other words, it is crucial for the privacy guarantees provided by this protocol that the aggregation server cannot simply iterate over all possible encrypted values and generate the K values needed to decrypt a given client's measurement. If this requirement does not hold, then the server can do this easily by locally evaluating the randomness derivation process on multiple measurements.
+Deterministic randomness MUST be sampled by clients to construct their STAR message, as discussed in {{client-message}}. This randomness CANNOT be derived locally, and MUST be sampled from the randomness server (that runs a {{!OPRF=I-D.irtf-cfrg-voprf}} service).
 
-For better security guarantees, it is RECOMMENDED that clients sample their randomness as part of an interaction with an independent entity (AKA `randomness server`) running a partially oblivious pseudorandom function protocol. In such an exchange, the client submits their measurement as input, and learns `rand = POPRF(sk,x;t)` as the randomness, where `sk` is the POPRF secret key, and `t` is public metadata that dictates the current epoch. Sampling randomness in this way restricts the aggregation server to only being able to run the previous attack as an online interaction with the randomness server.
+For best-possible security, the randomness server SHOULD sample and use a new OPRF key for each time epoch `t`, where the length of epochs is determined by the application. The previous OPRF key that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter epochs provide more client security,but also reduce the window in which data collection occurs.
 
-For further security enhancements, clients SHOULD sample their randomness in epoch `t` and then send it to the aggregation server in `t+1` (after the randomness server has rotated their secret key). This prevents the aggregation server from being after receiving the client messages, which shortens the window of the attack. It is also RECOMMENDED that the randomness server runs in verifiable mode, which allows clients to verify the randomness that they are being served {{!OPRF=I-D.irtf-cfrg-voprf}}.
-
-An alternative to using a partially oblivious pseudorandom function protocol is to instead use a standard verifiable OPRF (VOPRF), and ensure that a fresh key is sampled and used in each epoch `t`. Keys for previous epochs can be safely deleted. Deleting keys in this way reduces the window in which corruption of the randomness server by the aggregation server can harm previous client submissions (i.e. providing forward-secrecy).
+In this model, for further security, clients SHOULD sample their randomness in epoch `t` and then send it to the aggregation server in `t+1` (after the randomness server has rotated their secret key). This prevents the aggregation server from launching queries after receiving the client messages ({{leakage}}). It is also RECOMMENDED that the randomness server runs in verifiable mode, which allows clients to verify the randomness that they are being served {{!OPRF=I-D.irtf-cfrg-voprf}}.
 
 ## Cryptographic Choices
 
