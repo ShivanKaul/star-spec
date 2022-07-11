@@ -18,6 +18,14 @@ Formatted text and HTML versions of the draft can be built using `make`.
 $ make
 ```
 
+## Software Needed
+
 Command line usage requires that you have the necessary software installed.  See
 [the instructions](https://github.com/martinthomson/i-d-template/blob/main/doc/SETUP.md).
+
+Because we generate an SVG from ASCII art, you will also need:
+```
+npm install -g aasvg
+pip install svgcheck
+```
 
