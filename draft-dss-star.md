@@ -90,9 +90,9 @@ Servers often need to collect data from clients that can be privacy-sensitive if
 
 # Introduction
 
-Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for example, if the client is using the {{Tor}} network or {{?OHTTP=I-D.thomson-http-oblivious}}), it's possible for the collected data to be unique enough that the user's identity is leaked. A common solution to this problem of the measurement being user-identifying/sensitive is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems.
+Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for example, if the client is using the {{Tor}} network or {{?OHTTP=I-D.thomson-http-oblivious}} to upload data), it's possible for the collected data to be unique enough that the user's identity is leaked. A common solution to this problem of the measurement being user-identifying is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems.
 
-In this document we describe one such system, namely Distributed Secret Sharing for Private Threshold Aggregation Reporting (STAR) {{STAR}}, that is currently deployed in production by the {{Brave}} browser.
+In this document we describe one such system, namely Distributed Secret Sharing for Private Threshold Aggregation Reporting (STAR) {{STAR}}.
 
 # Conventions and Definitions
 
@@ -101,126 +101,406 @@ In this document we describe one such system, namely Distributed Secret Sharing 
 The following terms are used:
 
 Aggregation Server:
-: An entity that provides some tool/software, that would like to learn aggregated data points from their user-base.
+: An entity that would like to learn aggregated data from users.
 
 Randomness Server:
-: An entity that runs an oblivious pseudorandom function ({{!OPRF=I-D.irtf-cfrg-voprf}}) service that allows clients to receive pseudorandom function evaluations on their measurement and the server OPRF key, without the Randomness Server learning anything about their measurement. The clients use the output as randomness to produce the message that is then sent to the Aggregation Server.
+: An entity that runs an oblivious pseudorandom function ({{!OPRF=I-D.irtf-cfrg-voprf}}) service that allows clients to receive pseudorandom function evaluations on their measurement and the server OPRF key, without the Randomness Server learning anything about their measurement. The clients use the output as randomness to produce the report that is then sent to the Aggregation Server.
+
+Anonymizing Server:
+: An entity that clients use to decouple their identity (IP address) from their messages sent to the Aggregation Server.
 
 Client:
-: The entity that uses the tool.
+: The entity that provides user data to the system.
 
 Measurement:
-: The unencrypted, potentially-sensitive data point that the client is asked to report.
+: The unencrypted, potentially-sensitive data that the client is asked to report.
 
-Message:
+Report:
 : The encrypted measurement being sent by the client.
 
 Auxiliary Data:
-: Arbitrary data that clients may send as part of their message, but which is only revealed when at least K encrypted measurements of the same value are received.
+: Arbitrary data that clients may send as part of their report, but which is only revealed when at least K encrypted measurements of the same value are received.
+
+REPORT_THRESHOLD:
+: The minimum number of reports that an Aggregation Server needs before revealing client data. This value is chosen by the application.
+
+# Cryptographic Dependencies
+
+STAR depends on the following cryptographic protocols and primitives:
+
+- Threshold secret sharing (TSS); {{deps-tss}}
+- Oblivious Pseudorandom Function (OPRF); {{deps-oprf}}
+- Key Derivation Function (KDF); {{deps-kdf}}
+- Key-Committing Authenticated Encryption with Associated Data (KCAEAD); {{deps-aead}}
+
+This section describes the syntax for these protocols and primitives in more detail.
+
+## Threshold Secret Sharing {#deps-tss}
+
+A threshold secret sharing scheme with the following important properties:
+
+- Privacy: Secret shares reveal nothing unless k = REPORT_THRESHOLD shares are combined
+  to recover the secret.
+- Authenticity: Combining at least k = REPORT_THRESHOLD shares will only succeed if all
+  shares correspond to the same underlying secret. Otherwise, it fails.
+
+A threshold secret sharing scheme with these properties has the following syntax:
+
+- Share(k, n, msg, rand, tag): Produce a k-out-of-n share of the secret `msg` bound to
+  the auxiliary data `tag` using randomness `rand`. The values k and n are integers,
+  and `msg`, `rand`, and `tag` are byte strings.
+- Recover(share_set): Combine the secret shares in `share_set`, which is of size at
+  least k, and recover the corresponding message `msg`. If recovery fails, this function
+  returns an error.
+- Nshare: The size in bytes of a secret share value.
+
+## Oblivious Pseudorandom Function {#deps-oprf}
+
+An Oblivious Pseudorandom Function (OPRF) is a two-party protocol between client and
+server for computing a PRF such that the client learns the PRF output and neither party learns
+the input of the other. This specification depends on the prime-order OPRF construction specified
+in {{!OPRF=I-D.irtf-cfrg-voprf}}, draft version -10, using the OPRF mode (0x00) from {{OPRF, Section 3.1}}.
+
+The following OPRF client APIs are used:
+
+- Blind(element): Create and output (`blind`, `blinded_element`), consisting of a blinded
+  representation of input `element`, denoted `blinded_element`, along with a value to revert
+  the blinding process, denoted `blind`.
+- Finalize(element, blind, evaluated_element): Finalize the OPRF evaluation using input `element`,
+  random inverter `blind`, and evaluation output `evaluated_element`, yielding output `oprf_output`.
+
+Moreover, the following OPRF server APIs are used:
+
+- Evaluate(k, blinded_element): Evaluate blinded input element `blinded_element` using
+  input key `k`, yielding output element `evaluated_element`. This is equivalent to
+  the Evaluate function described in {{OPRF, Section 3.3.1}}, where `k` is the private key parameter.
+- DeriveKeyPair(seed, info): Derive a private and public key pair deterministically
+  from a seed and info parameter, as described in {{OPRF, Section 3.2}}.
+
+Finally, this specification makes use of the following shared APIs and parameters:
+
+- SerializeElement(element): Map input `element` to a fixed-length byte array `buf`.
+- DeserializeElement(buf): Attempt to map input byte array `buf` to an OPRF group element.
+  This function can raise a DeserializeError upon failure; see {{OPRF, Section 2.1}}
+  for more details.
+- Noe: The size of a serialized OPRF group element output from SerializeElement.
+- Nok: The size of an OPRF private key as output from DeriveKeyPair.
+
+## Key Derivation Function {#deps-kdf}
+
+A Key Derivation Function (KDF) is a function that takes some source of initial
+keying material and uses it to derive one or more cryptographically strong keys.
+This specification uses a KDF with the following API and parameters:
+
+- Extract(salt, ikm): Extract a pseudorandom key of fixed length `Nx` bytes from
+  input keying material `ikm` and an optional byte string `salt`.
+- Expand(prk, info, L): Expand a pseudorandom key `prk` using the optional string `info`
+  into `L` bytes of output keying material.
+- Nx: The output size of the `Extract()` function in bytes.
+
+## Key-Committing Authenticated Encryption with Associated Data {#deps-aead}
+
+A Key-Committing Authenticated Encryption with Associated Data (KCAEAD) scheme is an algorithm
+for encrypting and authenticating plaintext with some additional auxiliary data.
+It has the following API and parameters:
+
+- `Seal(key, nonce, aad, pt)`: Encrypt and authenticate plaintext
+  `pt` with associated data `aad` using symmetric key `key` and nonce
+  `nonce`, yielding ciphertext and tag `ct`. This function
+    can raise a `MessageLimitReachedError` upon failure.
+- `Open(key, nonce, aad, ct)`: Decrypt ciphertext and tag `ct` using
+  associated data `aad` with symmetric key `key` and nonce `nonce`,
+  returning plaintext message `pt`. This function can raise an
+  `OpenError` or `MessageLimitReachedError` upon failure.
+- `Nk`: The length in bytes of a key for this algorithm.
+- `Nn`: The length in bytes of a nonce for this algorithm.
+- `Nt`: The length in bytes of the authentication tag for this algorithm.
 
 # System Overview
 
-## Objective
+In STAR, clients generate encrypted measurements and send them to a single untrusted
+Aggregation Server in a report. Each report is effectively a random k-out-of-n share of
+the client data secret, along with some additional auxilary data. In a given amount of
+time, if the Aggregation Server receives the same encrypted value from k = REPORT_THRESHOLD
+clients, the server can recover the client data associated with each report. This ensures
+that clients only have their measurements revealed if they are part of a larger crowd,
+thereby achieving k-anonymity privacy (where k = REPORT_THRESHOLD).
 
-In STAR, clients generate `encrypted` measurements, that they send to a single untrusted Aggregation Server. In a given amount of time, if the Aggregation Server receives the same encrypted value from K clients (i.e. K values), the server is able to decrypt the value. This ensures that clients only have their measurements revealed if they are part of a larger crowd. This allows the client to maintain K-anonymity, when paired with mechanisms for removing client-identifying information from their requests.
+Each client report is as secret as the underlying underlying client data. That means low
+entropy client data values could be abused by an untrusted Aggregation Server in a
+dictionary attack to recover client data with fewer than REPORT_THRESHOLD honestly generated
+reports. To mitigate this, clients boost the entropy of their data using an Oblivious
+Pseudorandom Function (OPRF) provided by a separate, non-colluding Randomness Server.
 
-## System Architecture
+STAR also requires use of a client Anonymizing Server when interacting with the Aggregation
+Server so that the Aggregation Server cannot link a client report to a client which generated it.
 
-The overall system architecture is shown in {{arch}}, where x is the measurement and aux is auxiliary data.
+The overall architecture is shown in {{arch}}, where `msg` is the measurement and `aux` is
+auxiliary data associated with a given client. The output of the interaction is a data value
+`msg` shared amongst REPORT_THRESHOLD honest clients and a list of additional auxiliary data
+values associated with each of the REPORT_THRESHOLD client reports, denoted `<aux>`.
 
 ~~~~ aasvg
 
-     +---------+            +--------------+             +-------------+
-     | Client  |            |  Randomness  |             | Aggregation |
-     | (x aux) |            |    Server    |             |   Server    |
-     |         |            |              |             |             |
-     +---+-----+            +------+-------+             +------+------+
+     +------------+         +--------------+             +-------------+
+     |   Client   |         |  Randomness  |             | Aggregation |
+     | (msg, aux) |         |    Server    |             |   Server    |
+     +---+--------+         +------+-------+             +------+------+
          |                         |                            |
-+--------+---------+               |                            |
-| Randomness Phase |               |                            |
-+---+----+---------+               |                            |
-         |                         |                            |
-         | request(blinded(x))     |                            |
-         +------------------------>|                            |
-         |                         |                            |
-         | response(randomness)    |                            |
-         |<------------------------+                            |
-         |                         |                            |
-+--------+---------+               |                            |
-|   Message Phase  |               |                            |
-+---+----+---------+               |                            |
-         |                         |                            |
-         |                         |                            |
-+--------+---------+      +--------+---------+                  |
-| Generate Message |      |   Key rotation   |                  |
-+---+----+---------+      +---+----+---------+                  |
-         |                         |                            |
-         |                         |                            |
-         |                encrypted message                     |
-         +----------------------------------------------------->|
-         |                         |                            |
-         |                         |                   +--------+---------+
-         |                         |                   |   Aggregation    |
-         |                         |                   |      Phase       |
-         |                         |                   +--------+---------+
-         |                         |                            |
-         |                         |                       Reveal (x,aux)
-         |                         |                       from each message
-         |                         |                       if x sent by >=
-         |                         |                       k clients.
-
+         |                         |===========\                |
+         | Request(Blind(msg))     |           |                |
+         +------------------------>|           | Randomness     |
+         |                         | Evaluate  | Phase          |
+         | Response(...)           |           |                |
+         |<------------------------+           |                |
+         |                         |===========/                |
+         |                        ...                           |
+    Generate Report                                             |
+    using randomness                                            |
+         |                  +--------------+                    |
+         |                  |  Anonymizing |                    |
+         |                  |    Server    |                    |
+         |                  +-------+------+                    |
+         | Report                   |                            |========\
+         +--------------------------|-------------------------->|        |
+         |                          |                           | Store  | Report
+         |                          |           Acknowledgement | Report | Phase
+         <--------------------------|---------------------------+        |
+         |                         ...                          |========/
+         |                                                     ...
+         |                                                      |
+        ...                                                     |
+                                                                |========\
+                                                         Recover data    | Aggregation
+                                                         from Reports    | Phase
+                                                                |========/
+                                                                v
+                                                           (msg, <aux>)
 ~~~~
 {: #arch title="System Architecture"}
 
+In the following subsections, we describe each of the phases of STAR in more detail.
 
-The main goal in the STAR protocol is to have the aggregation performed by a single untrusted server, without requiring communication with any other non-colluding entities. In order for the aggregation to succeed, clients must send messages that are consistent with other client messages. This requires sampling randomness that is equivalent when clients share the same measurement.
+## Randomness Phase
 
-## Randomness sampling
+The randomness sampled from a client data MUST be a deterministic function of the measurement.
+Clients sample this randomness by running an OPRF protocol with the Randomness Server.
+This section describes how the Randomness Server is configured and then how clients
+interact with it for computing the randomness.
 
-The randomness `rand` sampled for each message MUST be a deterministic function of the measurement. The client MUST sample randomness as the output of an exchange with a separate server that implements a oblivious pseudorandom function protocol {{!OPRF=I-D.irtf-cfrg-voprf}} (running in verifiable mode, i.e. a VOPRF). The original client input (i.e. the measurement) MUST be kept secret from the Randomness Server.
+### Configuration
 
-Note that the Randomness Server in STAR does not need to be purposely configured, providing that clients all have a consistent service that operates a VOPRF-as-a-service, in line with the functionality explained in {{!OPRF=I-D.irtf-cfrg-voprf}}.
+The Randomness Server only needs to configure an OPRF key pair per epoch. This is
+done as follows:
 
-The client randomness sampling process involves the following steps:
+```
+seed = random(32)
+(sk, pk) = DeriveKeyPair(seed, "STAR")
+```
 
-- The client blinds the input measurement, stores state `blind` and sends the blinded element to the Randomness Server as `rq`.
-- Randomness Server evaluates the blinded measurement (without learning the original measurement) and returns the evaluated element `rp` back to client.
-- Client completes the OPRF evaluation by finalizing using original measurement `x`, the state `blind` and the evaluated element `rp`.
+[[OPEN ISSUE: describe HTTP API configuration]]
+
+### Randomness Protocol
+
+[[OPEN ISSUE: describe HTTP messages for actually sending these values]]
+
+This procedure works as follows. Let `msg` be the client's measurement to be used for deriving
+the randomness `rand`.
+
+Clients first generate the a context for invoking the OPRF protocol as follows:
+
+```
+client_context = SetupOPRFClient(0x0001) // OPRF(ristretto255, SHA-512) ciphersuite
+```
+
+Clients then blind their measurement using this context as follows:
+
+```
+(blinded, blinded_element) = client_context.Blind(msg)
+```
+
+Clients then compute `randomness_request = SerializeElement(blinded_element)` and send it
+to the Randomness Server. Upon receipt, the Randomness Server evaluates and returns a response.
+It does so by first creating a context for running the ORPF protocol as follows:
+
+```
+server_context = SetupOPRFServer(0x0001, sk, pk) // OPRF(ristretto255, SHA-512) ciphersuite
+```
+
+Here, `sk` and `pk` are private and public keys generated as described in {{randomness-configuration}}.
+
+The Randomness Server then computes `blinded_element = DeserializeElement(randomness_request)`.
+If this fails, the Randomness Server returns an error to the client. Otherwise, the server
+computes:
+
+```
+evaluate_element = server_context.Evaluate(sk, blinded_element)
+```
+
+The Randomness Server then computes `randomness_response = SerializeElement(blinded_element)` and
+sends it to the client. Upon receipt, the client computes `evaluated_element = DeserializeElement(randomness_response)`.
+If this fails, the client aborts the protocol. Otherwise, the client
+finalizes the OPRF protocol to compute the output `rand` as follows:
+
+```
+rand = client_context.Finalize(msg, blind, evaluated_element)
+```
+
+## Reporting Phase {#client-message}
+
+[[OPEN ISSUE: describe HTTP API configuration]]
+
+In the reporting phase, the client uses its measurement `msg` with auxiliary data `aux`
+and its derived randomness `rand` to produce a report for the Aggregation Server.
+This process works as follows. First, the client stretches `rand` into three values
+`r1`, `r2`, and `r3`, and additionally derives an KCAEAD key and nonce from `r1`.
+
+```
+// Randomness derivation
+rand_prk = Extract(nil, rand)
+key_seed = Expand(rand_prk, "r1", 16)
+share_coins = Expand(rand_prk, "r2", 16)
+tag = Expand(rand_prk, "r3", 16)
+
+// Symmetric encryption key derivation
+key_prk = Extract(nil, key_seed)
+key = Expand(key_prk, "key", Nk)
+nonce = Expand(key_prk, "nonce", Nn)
+```
+
+The client then generates a secret share of `key_seed` using `share_coins` as randomness as follows:
+
+```
+rand_share = Share(REPORT_THRESHOLD, ???, key_seed, share_coins, nil)
+```
+
+[[OPEN ISSUE: what should N be for the TSS scheme?]]
+
+The client then encrypts `msg` and `aux` using the KCAEAD key and nonce as follows:
+
+```
+ct = Seal(key, nonce, nil, msg || aux)
+```
+
+Finally, the client constructs a report consisting of `ct`, `rand_share`, and `tag`, and sends this to the Aggregation Server
+in the subsequent epoch, i.e., after the Randomness Server has rotated its OPRF key.
+
+[[OPEN ISSUE: how does the client know when this rotation happens?]]
+
+```
+struct {
+  opaque ct<1..2^16-1>;
+  opaque rand_share[Nshare];
+  opaque tag[16];
+} Report;
+```
+
+## Aggregation Phase
+
+Aggregation is the final phase of STAR and works as follows. First, the Aggregation
+Server groups reports together based on their `tag` value. Let `report_set` denote a
+set of at least REPORT_THRESHOLD reports that have a matching `tag` value.
+
+Given this set, the Aggregation Server begins by running the secret share recovery algoritm
+as follows:
+
+```
+key_seed = Recover(report_set)
+```
+
+If this fails, the Aggregation Server chooses a new candidate report share set and
+reruns the aggregation process.
+
+[[OPEN ISSUE: how does the server choose new candidate sets when share recovery fails?]]
+
+Otherwise, the Aggregation Server derives the same KCAEAD key and nonce from `key_seed` to
+decrypt each of the report ciphertexts in `report_set`.
+
+```
+key_prk = Extract(nil, key_seed)
+key = Expand(key_prk, "key", Nk)
+nonce = Expand(key_prk, "nonce", Nn)
+```
+
+Each report ciphertext is decrypted as follows:
+
+```
+msg || aux = Seal(key, nonce, nil, ct)
+```
+
+If this fails for any report, the Aggregation Server chooses a new candidate report share set and
+reruns the aggregation process. Otherwise, the Aggregation Server then outputs `msg` and each of
+the `aux` values for the corresponding reports.
+
+[[OPEN ISSUE: what happens if the msg is different for any two reports in the set?]]
 
 ## Auxiliary data
 
-In {{arch}}, `aux` refers to auxiliary or additional data that may be sent by clients, and is distinct from the measurement data protected by the K-anonymity guarantee. Auxiliary data is only revealed when the k-condition is met but, importantly, is not part of the k-condition itself. This data might be unique to some or all of the submissions, or omitted entirely. This can even be the actual measured value itself. For example: if we're measuring tabs open on a client, then the measurement being sent can be "city: Vancouver" and the aux data can be "7" for a particular client. The idea being, that we only reveal all the measurements once we know that there are at least K clients with city: Vancouver.
+In {{arch}}, `aux` refers to auxiliary or additional data that may be sent by clients, and
+is distinct from the measurement data protected by the K-anonymity guarantee. Auxiliary data
+is only revealed when the k-condition is met but, importantly, is not part of the k-condition
+itself. This data might be unique to some or all of the submissions, or omitted entirely. This
+can even be the actual measured value itself. For example: if we're measuring tabs open on a
+client, then the measurement being sent can be "city: Vancouver" and the aux data can be "7"
+for a particular client. The idea being, that we only reveal all the measurements once we
+know that there are at least K clients with city: Vancouver.
 
+# Security Considerations {#security-considerations}
 
-## Measurement Encryption {#client-message}
+This section contains security considerations for the draft.
 
-The client measurement encryption process involves the following steps:
+## Randomness Sampling {#sec-randomness-sampling}
 
-- Sample 48-bytes of randomness `rand` deterministically from their measurement `x` (as described in {{sec-randomness-sampling}}) in epoch `t`.
-- The client parses `rand` as three 16-byte chunks: `r1`, `r2`, and `r3`.
-- The client samples a share `s` of `r1` from a K-out-of-N secret sharing scheme based on Lagrange interpolation, such as {{ADSS}}. This process involves `r2` as consistent randomness for generating the coefficients for the polynomial. The client must then use independent local randomness for determining the point at which to evaluate the polynomial, and generate their share.
-- The client derives a symmetric encryption key, `key`, from `r1`.
-- The client encrypts the concatenation of `x` and `aux` into a ciphertext `c`.
-- The client then generates the message to send to the server as the tuple `(c,s,r3)`.
-- The client sends the message to the Aggregation Server via an anonymizing proxy in epoch `t+1`, after Randomness Server has rotated their secret key (see {{sec-randomness-sampling}}).
+Deterministic randomness MUST be sampled by clients to construct their STAR report, as discussed in {{client-message}}. This randomness CANNOT be derived locally, and MUST be sampled from the Randomness Server (that runs an {{!OPRF=I-D.irtf-cfrg-voprf}} service).
 
-## Server Aggregation
+For best-possible security, the Randomness Server SHOULD sample and use a new OPRF key for each time epoch `t`, where the length of epochs is determined by the application. The previous OPRF key that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter epochs provide more client security, but also reduce the window in which data collection occurs.
 
-The server computes the output of the aggregation by performing the following steps.
+In this model, for further security, clients SHOULD sample their randomness in epoch `t` and then send it to the Aggregation Server in `t+1` (after the Randomness Server has rotated their secret key). This prevents the Aggregation Server from launching queries after receiving the client reports ({{leakage}}). It is also RECOMMENDED that the Randomness Server runs in verifiable mode, which allows clients to verify the randomness that they are being served {{!OPRF=I-D.irtf-cfrg-voprf}}.
 
-- Group client messages together depending on whether they share the same value `r3`.
-- For any subset of client messages greater that is smaller than `K`:
-  - Abort.
-- Otherwise:
-  - Run secret share recovery on the set of client-received shares `s` to reveal `r1`.
-  - Derive `key` from `r1`.
-  - Decrypt each ciphertext `c` to retrieve `x` and `aux`.
-  - Check that each decrypted `x` value is equivalent.
-  - Output `x` and the set of all auxiliary data.
+## Cryptographic Choices
+
+- All encryption operations MUST be carried out using a secure symmetric authenticated encryption scheme.
+- The secret sharing scheme MUST be information-theoretically secure, and SHOULD based upon traditional K-out-of-N Shamir secret sharing.
+- For functionality reasons, secret sharing operations SHOULD be implemented in a finite field where collisions are unlikely (e.g. of size 128-bits). This is to ensure that clients do not sample identical shares of the same value.
+- Client reports MUST be sent over a secure, authenticated channel, such as TLS.
+
+## Oblivious Submission {#oblivious-submission}
+
+The reports being submitted to an Aggregation Server in STAR MUST be detached from client identity. This is to ensure that the Aggregation Server does not learn exactly what each client submits, in the event that their measurement is revealed. This can be achieved by having the clients submit their report via an {{?OHTTP=I-D.thomson-http-oblivious}} relay. In this flow, the Aggregation Server is configured as both the Gateway and Target Resource (the entity decrypting the message, using it, generating a response to the Encapsulated Request and encrypting the response). A separate Relay Resource is then used as to hide the client identity. Note that collusion between the Aggregation Server and the Relay Resource is expressly forbidden. All the client responsibilities mentioned in section 7.1 of {{?OHTTP=I-D.thomson-http-oblivious}} apply.
+
+The OHTTP Relay Resource and Randomness Server MAY be combined into a single entity, since client reports are protected by a TLS connection between the client and the Aggregation Server. Therefore, OHTTP support can be enabled without requiring any additional non-colluding parties. In this mode, the Randomness Server SHOULD allow two endpoints: (1) to evaluate the VOPRF functionality that provides clients with randomness, and (2) to proxy client reports to the Aggregation Server. However, this increases the privacy harm in case of collusion; see {{collusion-aggregation-proxy}}.
+
+It should also be noted that client reports CAN be sent via existing anonymizing proxies, such as {{Tor}}, but the OHTTP solution is likely to be the most efficient way to achieve oblivious submission.
+
+## Malicious Aggregation Server
+
+### Dictionary Attacks {#dictionary-attacks}
+
+The Aggregation Server may attempt to launch a dictionary attack against the client measurement, by repeatedly launching queries against the Randomness Server for measurements of its choice. This is mitigated by the fact that the Randomness Server regularly rotates the VOPRF key that they use, which reduces the window in which this attack can be launched ({{sec-randomness-sampling}}). Note that such attacks can also be limited in scope by maintaining out-of-band protections against entities that attempt to launch large numbers of queries in short time periods.
+
+### Sybil Attacks
+
+By their very nature, attacks where a malicious Aggregation Server injects clients into the system that send reports to try and reveal data from honest clients are an unavoidable consequence of building any threshold aggregation system. This system cannot provide comprehensive protection against such attacks. The time window in which such attacks can occur is restricted by rotating the VOPRF key ({{sec-randomness-sampling}}). Such attacks can also be limited in scope by using higher-layer defences such as identity-based certification {{Sybil}}, which STAR is compatible with.
+
+## Leakage and Failure Model {#leakage}
+
+### Size of Anonymity Set
+
+Client reports immediately leak deterministic tags that are derived from the VOPRF output that is evaluated over client measurement. This has the immediate impact that the size of the anonymity set for each received measurement (i.e. which clients share the same measurement) is revealed, even if the measurement is not revealed. As long as client reports are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} Relay Resource, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are likely to lead to deanonymization of clients or their data.
+
+### Collusion between Aggregation and Randomness Servers {#collusion-aggregation-randomness-servers}
+
+Finally, note that if the Aggregation and Randomness Servers collude and jointly learn the VOPRF key, then the attack above essentially becomes an offline dictionary attack. As such, client security is not completely lost when collusion occurs, which represents a safer mode of failure when compared with Prio and Poplar.
+
+### Collusion between Aggregation Server and Anonymizing Proxy {#collusion-aggregation-proxy}
+
+As mentioned in {{oblivious-submission}}, systems that depend on a relaying server to remove linkage between client reports and client identity rely on the assumption of non-collusion between the relay and the server processing the client reports. Given that STAR depends on such a system for guaranteeing that the Aggregation Server does not come to know which client submitted the STAR report (once decrypted), the same collusion risk applies.
+
+It's worth mentioning here for completeness sake that if the OHTTP Relay Resource and Randomness Server are combined into a single entity as mentioned in {{oblivious-submission}}, then this worsens the potential leakage in case of collusion: if the entities responsible for the Aggregation Server and the Randomness Server collude as described in {{collusion-aggregation-randomness-servers}}, this results in the Aggregation Server in effect colluding with the anonymizing proxy.
 
 # Comparisons with other Systems
 
-(for information/discussion: consider removing before publication)
+[[EDITOR NOTE: for information/discussion: consider removing before publication]]
 
 ## Private Heavy-Hitter Discovery
 
@@ -243,58 +523,6 @@ Finally, note that under collusion, the STAR security model requires the adversa
 ## Support for auxiliary data
 
 It should be noted that clients can send auxiliary data ({{auxiliary-data}}) that is revealed only when the aggregation including their measurement succeeds (i.e. K-1 other clients send the same value). Such data is supported by neither Prio, nor Poplar.
-
-# Security Considerations {#security-considerations}
-
-## Randomness Sampling {#sec-randomness-sampling}
-
-Deterministic randomness MUST be sampled by clients to construct their STAR message, as discussed in {{client-message}}. This randomness CANNOT be derived locally, and MUST be sampled from the Randomness Server (that runs an {{!OPRF=I-D.irtf-cfrg-voprf}} service).
-
-For best-possible security, the Randomness Server SHOULD sample and use a new OPRF key for each time epoch `t`, where the length of epochs is determined by the application. The previous OPRF key that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter epochs provide more client security, but also reduce the window in which data collection occurs.
-
-In this model, for further security, clients SHOULD sample their randomness in epoch `t` and then send it to the Aggregation Server in `t+1` (after the Randomness Server has rotated their secret key). This prevents the Aggregation Server from launching queries after receiving the client messages ({{leakage}}). It is also RECOMMENDED that the Randomness Server runs in verifiable mode, which allows clients to verify the randomness that they are being served {{!OPRF=I-D.irtf-cfrg-voprf}}.
-
-## Cryptographic Choices
-
-- All encryption operations MUST be carried out using a secure symmetric authenticated encryption scheme.
-- The secret sharing scheme MUST be information-theoretically secure, and SHOULD based upon traditional K-out-of-N Shamir secret sharing.
-- For functionality reasons, secret sharing operations SHOULD be implemented in a finite field where collisions are unlikely (e.g. of size 128-bits). This is to ensure that clients do not sample identical shares of the same value.
-- Client messages MUST be sent over a secure, authenticated channel, such as TLS.
-
-## Oblivious Submission {#oblivious-submission}
-
-The messages being submitted to an Aggregation Server in STAR MUST be detached from client identity. This is to ensure that the Aggregation Server does not learn exactly what each client submits, in the event that their measurement is revealed. This can be achieved by having the clients submit their messages via an {{?OHTTP=I-D.thomson-http-oblivious}} relay. In this flow, the Aggregation Server is configured as both the Gateway and Target Resource (the entity decrypting the message, using it, generating a response to the Encapsulated Request and encrypting the response). A separate Relay Resource is then used as to hide the client identity. Note that collusion between the Aggregation Server and the Relay Resource is expressly forbidden. All the client responsibilities mentioned in section 7.1 of {{?OHTTP=I-D.thomson-http-oblivious}} apply.
-
-The OHTTP Relay Resource and Randomness Server MAY be combined into a single entity, since client messages are protected by a TLS connection between the client and the Aggregation Server. Therefore, OHTTP support can be enabled without requiring any additional non-colluding parties. In this mode, the Randomness Server SHOULD allow two endpoints: (1) to evaluate the VOPRF functionality that provides clients with randomness, and (2) to proxy client messages to the Aggregation Server. However, this increases the privacy harm in case of collusion; see {{collusion-aggregation-proxy}}.
-
-It should also be noted that client messages CAN be sent via existing anonymizing proxies, such as {{Tor}}, but the OHTTP solution is likely to be the most efficient way to achieve oblivious submission.
-
-## Malicious Aggregation Server
-
-### Dictionary Attacks {#dictionary-attacks}
-
-The Aggregation Server may attempt to launch a dictionary attack against the client measurement, by repeatedly launching queries against the Randomness Server for measurements of its choice. This is mitigated by the fact that the Randomness Server regularly rotates the VOPRF key that they use, which reduces the window in which this attack can be launched ({{sec-randomness-sampling}}). Note that such attacks can also be limited in scope by maintaining out-of-band protections against entities that attempt to launch large numbers of queries in short time periods.
-
-### Sybil Attacks
-
-By their very nature, attacks where a malicious Aggregation Server injects clients into the system that send messages to try and reveal data from honest clients are an unavoidable consequence of building any threshold aggregation system. This system cannot provide comprehensive protection against such attacks. The time window in which such attacks can occur is restricted by rotating the VOPRF key ({{sec-randomness-sampling}}). Such attacks can also be limited in scope by using higher-layer defences such as identity-based certification {{Sybil}}, which STAR is compatible with.
-
-## Leakage and Failure Model {#leakage}
-
-### Size of Anonymity Set
-
-Client messages immediately leak deterministic tags that are derived from the VOPRF output that is evaluated over client measurement. This has the immediate impact that the size of the anonymity set for each received measurement (i.e. which clients share the same measurement) is revealed, even if the measurement is not revealed. As long as client messages are sent via an {{?OHTTP=I-D.thomson-http-oblivious}} Relay Resource, then the leakage derived from the anonymity sets themselves is significantly reduced. However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are likely to lead to deanonymization of clients or their data.
-
-### Collusion between Aggregation and Randomness Servers {#collusion-aggregation-randomness-servers}
-
-Finally, note that if the Aggregation and Randomness Servers collude and jointly learn the VOPRF key, then the attack above essentially becomes an offline dictionary attack. As such, client security is not completely lost when collusion occurs, which represents a safer mode of failure when compared with Prio and Poplar.
-
-### Collusion between Aggregation Server and Anonymizing Proxy {#collusion-aggregation-proxy}
-
-As mentioned in {{oblivious-submission}}, systems that depend on a relaying server to remove linkage between client messages and client identity rely on the assumption of non-collusion between the relay and the server processing the client messages. Given that STAR depends on such a system for guaranteeing that the Aggregation Server does not come to know which client submitted the STAR message (once decrypted), the same collusion risk applies.
-
-It's worth mentioning here for completeness sake that if the OHTTP Relay Resource and Randomness Server are combined into a single entity as mentioned in {{oblivious-submission}}, then this worsens the potential leakage in case of collusion: if the entities responsible for the Aggregation Server and the Randomness Server collude as described in {{collusion-aggregation-randomness-servers}}, this results in the Aggregation Server in effect colluding with the anonymizing proxy.
-
 
 # IANA Considerations
 
