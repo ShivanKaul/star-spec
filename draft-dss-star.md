@@ -241,7 +241,7 @@ dictionary attack to recover client data with fewer than REPORT_THRESHOLD honest
 reports. To mitigate this, clients boost the entropy of their data using output from an Oblivious
 Pseudorandom Function (OPRF) provided by a separate, non-colluding Randomness Server.
 
-STAR also requires use of a client Anonymizing Server when interacting with the Aggregation
+STAR also requires use of a client Anonymizing Proxy when interacting with the Aggregation
 Server so that the Aggregation Server cannot link a client report to a client which generated it.
 
 The overall architecture is shown in {{arch}}, where `msg` is the measurement and `aux` is
