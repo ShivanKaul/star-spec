@@ -235,7 +235,7 @@ clients, the server can recover the client data associated with each report. Thi
 that clients only have their measurements revealed if they are part of a larger crowd,
 thereby achieving k-anonymity privacy (where k = REPORT_THRESHOLD).
 
-Each client report is as secret as the underlying underlying client data. That means low
+Each client report is as secret as the underlying client data. That means low
 entropy client data values could be abused by an untrusted Aggregation Server in a
 dictionary attack to recover client data with fewer than REPORT_THRESHOLD honestly generated
 reports. To mitigate this, clients boost the entropy of their data using an Oblivious
