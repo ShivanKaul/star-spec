@@ -299,6 +299,10 @@ interact with it for computing the randomness.
 
 ### Configuration
 
+STAR clients are configured with a Randomness Server URI. Clients use this URI
+to send HTTP messages to the Randomness Server to complete the protocol. As an example,
+the Randomness Server URI might be https://randomness.example.
+
 The Randomness Server only needs to configure an OPRF key pair per epoch. This is
 done as follows:
 
@@ -310,8 +314,6 @@ seed = random(32)
 [[OPEN ISSUE: describe HTTP API configuration]]
 
 ### Randomness Protocol
-
-[[OPEN ISSUE: describe HTTP messages for actually sending these values]]
 
 This procedure works as follows. Let `msg` be the client's measurement to be used for deriving
 the randomness `rand`.
@@ -329,7 +331,22 @@ Clients then blind their measurement using this context as follows:
 ```
 
 Clients then compute `randomness_request = SerializeElement(blinded_element)` and send it
-to the Randomness Server. Upon receipt, the Randomness Server evaluates and returns a response.
+to the Randomness Server URI in a HTTP POST message using content type "message/star-randomness-request".
+An example request is shown below.
+
+~~~
+:method = POST
+:scheme = https
+:authority = randomness.example
+:path = /
+accept = message/star-randomness-response
+content-type = message/star-randomness-response
+content-length = Ne
+
+<Bytes containing a serialized blinded element>
+~~~
+
+Upon receipt, the Randomness Server evaluates and returns a response.
 It does so by first creating a context for running the ORPF protocol as follows:
 
 ```
@@ -339,15 +356,26 @@ server_context = SetupOPRFServer(0x0001, sk, pk) // OPRF(ristretto255, SHA-512) 
 Here, `sk` and `pk` are private and public keys generated as described in {{randomness-configuration}}.
 
 The Randomness Server then computes `blinded_element = DeserializeElement(randomness_request)`.
-If this fails, the Randomness Server returns an error to the client. Otherwise, the server
-computes:
+If this fails, the Randomness Server returns an error in a 4xx response to the client. Otherwise,
+the server computes:
 
 ```
-evaluate_element = server_context.Evaluate(sk, blinded_element)
+evaluated_element = server_context.Evaluate(sk, blinded_element)
 ```
 
-The Randomness Server then computes `randomness_response = SerializeElement(blinded_element)` and
-sends it to the client. Upon receipt, the client computes `evaluated_element = DeserializeElement(randomness_response)`.
+The Randomness Server then computes `randomness_response = SerializeElement(evaluated_element)` and
+sends it to the client using the content type "message/star-randomness-response". An example
+response is below.
+
+~~~
+:status = 200
+content-type = message/star-randomness-response
+content-length = Ne
+
+<Bytes containing a serialized evaluated element>
+~~~
+
+Upon receipt, the client computes `evaluated_element = DeserializeElement(randomness_response)`.
 If this fails, the client aborts the protocol. Otherwise, the client
 finalizes the OPRF protocol to compute the output `rand` as follows:
 
@@ -357,11 +385,23 @@ rand = client_context.Finalize(msg, blind, evaluated_element)
 
 ## Reporting Phase {#client-message}
 
-[[OPEN ISSUE: describe HTTP API configuration]]
-
 In the reporting phase, the client uses its measurement `msg` with auxiliary data `aux`
 and its derived randomness `rand` to produce a report for the Aggregation Server.
-This process works as follows. First, the client stretches `rand` into three values
+
+### Reporting Configuration
+
+The reporting phase requires the Aggregation Server to be configured with a URI for
+accepting reports. As an example, the Aggregation Server URI might be https://aggregator.example.
+The Aggregation Server is both an Oblivious HTTP Target and Oblivious Gateway Resource.
+
+Clients are also configured with the URI for an Anonymizing Server, which is an Oblivious
+Relay Resource as defined in {{OHTTP}}. As an example, the Anonymizing Server URI might
+be https://anonymizer.example, and this relay is configured to forward requests to the
+Aggregation Server URI.
+
+### Reporting Protocol
+
+This reporting protocol works as follows. First, the client stretches `rand` into three values
 `key_seed`, `share_coins`, and `tag`, and additionally derives an KCAEAD key and nonce
 from `key_seed`.
 
@@ -381,7 +421,7 @@ nonce = Expand(key_prk, "nonce", Nn)
 The client then generates a secret share of `key_seed` using `share_coins` as randomness as follows:
 
 ```
-rand_share = Share(REPORT_THRESHOLD, ???, key_seed, share_coins, nil)
+rand_share = Share(REPORT_THRESHOLD, TBD, key_seed, share_coins, nil)
 ```
 
 [[OPEN ISSUE: what should N be for the TSS scheme?]]
@@ -389,27 +429,48 @@ rand_share = Share(REPORT_THRESHOLD, ???, key_seed, share_coins, nil)
 The client then encrypts `msg` and `aux` using the KCAEAD key and nonce as follows:
 
 ```
-ct = Seal(key, nonce, nil, msg || aux)
+report_data = msg || aux
+encrypted_report = Seal(key, nonce, nil, report_data)
 ```
 
-Finally, the client constructs a report consisting of `ct`, `rand_share`, and `tag`, and sends this to the Aggregation Server
-in the subsequent epoch, i.e., after the Randomness Server has rotated its OPRF key.
+Finally, the client constructs a report consisting of `encrypted_report`, `rand_share`,
+and `tag`, and sends this to the Anonymizing Server in the subsequent epoch, i.e., after
+the Randomness Server has rotated its OPRF key.
 
 [[OPEN ISSUE: how does the client know when this rotation happens?]]
 
 ```
 struct {
-  opaque ct<1..2^16-1>;
+  opaque encrypted_report<1..2^16-1>;
   opaque rand_share[Nshare];
   opaque tag[16];
 } Report;
 ```
 
+Specifically, Clients send a Report to the Aggregation Server using an HTTP POST message
+with content type "message/star-report". An example message is below.
+
+~~~
+:method = POST
+:scheme = https
+:authority = aggregator.example
+:path = /
+content-type = message/star-report
+content-length = <Length of body>
+
+<Bytes containing a Report>
+~~~
+
+This message is encapsulated using OHTTP and sent to the Anonymizing Server. Upon receipt,
+the Aggregation Server replies with a 200 OK status code, or an appropriate 4xx error code,
+in an encapsulated response to the client.
+
 ## Aggregation Phase
 
-Aggregation is the final phase of STAR and works as follows. First, the Aggregation
-Server groups reports together based on their `tag` value. Let `report_set` denote a
-set of at least REPORT_THRESHOLD reports that have a matching `tag` value.
+Aggregation is the final phase of STAR. It happens offline and does not require any
+communication between different STAR entities. It proceeds as follows. First, the
+Aggregation Server groups reports together based on their `tag` value. Let `report_set`
+denote a set of at least REPORT_THRESHOLD reports that have a matching `tag` value.
 
 Given this set, the Aggregation Server begins by running the secret share recovery algoritm
 as follows:
@@ -435,7 +496,8 @@ nonce = Expand(key_prk, "nonce", Nn)
 Each report ciphertext is decrypted as follows:
 
 ```
-msg || aux = Seal(key, nonce, nil, ct)
+report_data = Seal(key, nonce, nil, ct)
+msg || aux = report_data
 ```
 
 If this fails for any report, the Aggregation Server chooses a new candidate report share set and
@@ -481,13 +543,9 @@ verifiable mode, which allows clients to verify the randomness that they are bei
 
 The reports being submitted to an Aggregation Server in STAR MUST be detached from client identity.
 This is to ensure that the Aggregation Server does not learn exactly what each client submits,
-in the event that their measurement is revealed. This can be achieved by having the clients
-submit their report via an {{OHTTP}} relay. In this flow, the Aggregation Server is configured
-as both the Gateway and Target Resource (the entity decrypting the message, using it, generating
-a response to the Encapsulated Request and encrypting the response). A separate Relay Resource
-is then used as to hide the client identity. Note that collusion between the Aggregation Server
-and the Relay Resource is expressly forbidden. All the client responsibilities mentioned in
-section 7.1 of {{OHTTP}} apply.
+in the event that their measurement is revealed. This is achieved through the use of an Anonymizing
+Server, which is an OHTTP Oblivious Relay Resource. This server MUST NOT collude with the Aggregation
+Server. All the client responsibilities mentioned in section 7.1 of {{OHTTP}} apply.
 
 The OHTTP Relay Resource and Randomness Server MAY be combined into a single entity, since client
 reports are protected by a TLS connection between the client and the Aggregation Server. Therefore,
@@ -496,8 +554,9 @@ the Randomness Server SHOULD allow two endpoints: (1) to evaluate the VOPRF func
 provides clients with randomness, and (2) to proxy client reports to the Aggregation Server.
 However, this increases the privacy harm in case of collusion; see {{collusion-aggregation-proxy}}.
 
-It should also be noted that client reports CAN be sent via existing anonymizing proxies, such as
-{{Tor}}, but the OHTTP solution is likely to be the most efficient way to achieve oblivious submission.
+If configured otherwise, clients can upload reports to the Aggregation Server using an existing
+anonymizing proxy service such as {{Tor}}. However, use of OHTTP is likely to be the most efficient
+way to achieve oblivious submission.
 
 ## Malicious Aggregation Server
 
