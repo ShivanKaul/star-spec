@@ -530,7 +530,7 @@ Randomness Server (that runs an {{!OPRF=I-D.irtf-cfrg-voprf}} service).
 For best-possible security, the Randomness Server SHOULD sample and use a new OPRF key for each
 time epoch `t`, where the length of epochs is determined by the application. The previous OPRF
 key that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter
-epochs provide more client security, but also reduce the window in which data collection occurs.
+epochs provide more protection from Aggregation Server attacks, but also reduce the window in which data collection occurs (and hence reduce the possibility that we will have enough reports to decrypt) while increasing the reporting latency.
 
 In this model, for further security, clients SHOULD sample their randomness in epoch `t` and
 then send it to the Aggregation Server in `t+1` (after the Randomness Server has rotated their
