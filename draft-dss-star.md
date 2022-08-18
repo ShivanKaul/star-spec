@@ -268,7 +268,7 @@ values associated with each of the REPORT_THRESHOLD client reports, denoted `<au
     using randomness                                            |
          |                  +--------------+                    |
          |                  |  Anonymizing |                    |
-         |                  |    Server    |                    |
+         |                  |    Proxy    |                    |
          |                  +-------+------+                    |
          | Report                   |                           |========\
          +--------------------------|-------------------------->|        |
