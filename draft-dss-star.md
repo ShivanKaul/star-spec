@@ -238,7 +238,7 @@ thereby achieving k-anonymity privacy (where k = REPORT_THRESHOLD).
 Each client report is as secret as the underlying client data. That means low
 entropy client data values could be abused by an untrusted Aggregation Server in a
 dictionary attack to recover client data with fewer than REPORT_THRESHOLD honestly generated
-reports. To mitigate this, clients boost the entropy of their data using an Oblivious
+reports. To mitigate this, clients boost the entropy of their data using output from an Oblivious
 Pseudorandom Function (OPRF) provided by a separate, non-colluding Randomness Server.
 
 STAR also requires use of a client Anonymizing Server when interacting with the Aggregation
