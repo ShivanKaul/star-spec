@@ -48,6 +48,10 @@ informative:
       - ins: R. Dingledine
       - ins: N. Mathewson
       - ins: P. Syverson
+  PrivateRelay:
+    title: "iCloud Private Relay Overview"
+    date: 2021
+    target: https://www.apple.com/icloud/docs/iCloud_Private_Relay_Overview_Dec2021.pdf
 
   Brave:
     title: Brave Browser
@@ -83,16 +87,30 @@ informative:
 
 --- abstract
 
-Servers often need to collect data from clients that can be privacy-sensitive if the server is able to associate the collected data with a particular user. In this document we describe STAR, an efficient and secure threshold aggregation protocol for collecting measurements from clients by an untrusted aggregation server, while maintaining K-anonymity guarantees.
+Servers often need to collect data from clients that can be privacy-sensitive if
+the server is able to associate the collected data with a particular user. In
+this document we describe STAR, an efficient and secure threshold aggregation
+protocol for collecting measurements from clients by an untrusted aggregation
+server, while maintaining K-anonymity guarantees.
 
 
 --- middle
 
 # Introduction
 
-Collecting user data is often fraught with privacy issues because without adequate protections it is trivial for the server to learn sensitive information about the client contributing data. Even when the client's identity is separated from the data (for example, if the client is using the {{Tor}} network or {{?OHTTP=I-D.ietf-ohai-ohttp}} to upload data), it's possible for the collected data to be unique enough that the user's identity is leaked. A common solution to this problem of the measurement being user-identifying is to make sure that the measurement is only revealed to the server if there are at least K clients that have contributed the same data, thus providing K-anonymity to participating clients. Such privacy-preserving systems are referred to as threshold aggregation systems.
+Collecting user data is often fraught with privacy issues because without adequate
+protections it is trivial for the server to learn sensitive information about the
+client contributing data. Even when the client's identity is separated from the
+data (for example, if the client is using the {{Tor}} network or
+{{?OHTTP=I-D.ietf-ohai-ohttp}} to upload data), it's possible for the collected data
+to be unique enough that the user's identity is leaked. A common solution to this
+problem of the measurement being user-identifying is to make sure that the measurement
+is only revealed to the server if there are at least K clients that have contributed
+the same data, thus providing K-anonymity to participating clients. Such
+privacy-preserving systems are referred to as threshold aggregation systems.
 
-In this document we describe one such system, namely Distributed Secret Sharing for Private Threshold Aggregation Reporting (STAR) {{STAR}}.
+In this document we describe one such system, namely Distributed Secret Sharing for
+Private Threshold Aggregation Reporting (STAR) {{STAR}}.
 
 # Conventions and Definitions
 
@@ -104,10 +122,15 @@ Aggregation Server:
 : An entity that would like to learn aggregated data from users.
 
 Randomness Server:
-: An entity that runs an oblivious pseudorandom function ({{!OPRF=I-D.irtf-cfrg-voprf}}) service that allows clients to receive pseudorandom function evaluations on their measurement and the server OPRF key, without the Randomness Server learning anything about their measurement. The clients use the output as randomness to produce the report that is then sent to the Aggregation Server.
+: An entity that runs an oblivious pseudorandom function ({{!OPRF=I-D.irtf-cfrg-voprf}})
+  service that allows clients to receive pseudorandom function evaluations on their
+  measurement and the server OPRF key, without the Randomness Server learning anything
+  about their measurement. The clients use the output as randomness to produce the
+  report that is then sent to the Aggregation Server.
 
 Anonymizing Server:
-: An entity that clients use to decouple their identity (IP address) from their messages sent to the Aggregation Server.
+: An entity that clients use to decouple their identity (IP address) from their
+messages sent to the Aggregation Server.
 
 Client:
 : The entity that provides user data to the system.
@@ -119,10 +142,12 @@ Report:
 : The encrypted measurement being sent by the client.
 
 Auxiliary Data:
-: Arbitrary data that clients may send as part of their report, but which is only revealed when at least K encrypted measurements of the same value are received.
+: Arbitrary data that clients may send as part of their report, but which is only
+  revealed when at least K encrypted measurements of the same value are received.
 
 REPORT_THRESHOLD:
-: The minimum number of reports that an Aggregation Server needs before revealing client data. This value is chosen by the application.
+: The minimum number of reports that an Aggregation Server needs before revealing
+  client data. This value is chosen by the application.
 
 # Cryptographic Dependencies
 
@@ -243,6 +268,8 @@ Pseudorandom Function (OPRF) provided by a separate, non-colluding Randomness Se
 
 STAR also requires use of a client Anonymizing Proxy when interacting with the Aggregation
 Server so that the Aggregation Server cannot link a client report to a client which generated it.
+This document does not require a specific type of proxy. In practice, proxies built on {{OHTTP}}
+or {{Tor}} suffice; see {{proxy-options}} for more details.
 
 The overall architecture is shown in {{arch}}, where `msg` is the measurement and `aux` is
 auxiliary data associated with a given client. The output of the interaction is a data value
@@ -268,7 +295,7 @@ values associated with each of the REPORT_THRESHOLD client reports, denoted `<au
     using randomness                                            |
          |                  +--------------+                    |
          |                  |  Anonymizing |                    |
-         |                  |    Proxy    |                    |
+         |                  |    Proxy     |                    |
          |                  +-------+------+                    |
          | Report                   |                           |========\
          +--------------------------|-------------------------->|        |
@@ -394,10 +421,9 @@ The reporting phase requires the Aggregation Server to be configured with a URI 
 accepting reports. As an example, the Aggregation Server URI might be https://aggregator.example.
 The Aggregation Server is both an Oblivious HTTP Target and Oblivious Gateway Resource.
 
-Clients are also configured with the URI for an Anonymizing Server, which is an Oblivious
-Relay Resource as defined in {{OHTTP}}. As an example, the Anonymizing Server URI might
-be https://anonymizer.example, and this relay is configured to forward requests to the
-Aggregation Server URI.
+Clients are also configured with an Anonymizing Proxy that clients can use to send
+proxy reports to the Aggregation Server. The exact type of proxy is not specified here.
+See {{proxy-options}} for more details.
 
 ### Reporting Protocol
 
@@ -461,9 +487,8 @@ content-length = <Length of body>
 <Bytes containing a Report>
 ~~~
 
-This message is encapsulated using OHTTP and sent to the Anonymizing Server. Upon receipt,
-the Aggregation Server replies with a 200 OK status code, or an appropriate 4xx error code,
-in an encapsulated response to the client.
+This message is sent to the Aggregation Server through the Anonymizing Proxy. See {{proxy-options}}
+for different types of proxy options.
 
 ## Aggregation Phase
 
@@ -517,6 +542,40 @@ client, then the measurement being sent can be "city: Vancouver" and the aux dat
 for a particular client. The idea being, that we only reveal all the measurements once we
 know that there are at least K clients with city: Vancouver.
 
+# Anonymizing Proxy Options {#proxy-options}
+
+The Anonymizing Proxy can be instantiated using {{OHTTP}}, {{Tor}}, or even a TCP-layer proxy.
+The choice of which proxy to use depends on the application threat model. The fundamental
+requirement is that the Anonymizing Proxy hide the client IP address and any other
+unique client information from the Aggregation Server.
+
+In general, there are two ways clients could implement the proxy: at the application layer,
+e.g., via {{OHTTP}}, or at the connection or transport layer, e.g., via {{Tor}} or similar
+systems. We describe each below.
+
+## Application-Layer Proxy
+
+An application-layer proxy hides client identifying information from the Aggregation Server
+via application-layer intermediation. {{OHTTP}} is the RECOMMENDED option for an application-layer
+proxy. {{OHTTP}} ensures that a network adversary between the client and Anonymizing Proxy
+cannot link reports sent to the Aggregation Server (up to what is possible by traffic analysis).
+
+OHTTP consists of four entities: client, Oblivious Relay Resource, Oblivious Gateway Resource,
+and Target Resource. In this context, the Target Resource is the Aggregation Server. The
+Aggregation Server can also act as the Oblvious Gateway Resource. Clients are configured with
+the URI of the Oblivious Relay Resource, and use this to forward requests to a Oblivious
+Gateway Resource. The Oblivious Gateway Resource then forwards requests to the Target as required.
+
+## Connection-Layer Proxy
+
+A connection-layer proxy hides client identifying information from the Aggregation Server via
+connection-layer intermediation. {{Tor}} is perhaps the most commonly known example of such a proxy.
+Clients can use Tor to connect to and send reports to the Aggregation Server. Other examples of
+connection-layer proxies include CONNECT-based HTTPS proxies, used in systems like Private Relay
+{{PrivateRelay}} and TCP-layer proxies. TCP proxies only offer weak protection in practice since
+an adversary capable of eavesdropping on ingress and egress connections from the Anonymizing Proxy
+can trivially link data together.
+
 # Security Considerations {#security-considerations}
 
 This section contains security considerations for the draft.
@@ -530,7 +589,9 @@ Randomness Server (that runs an {{!OPRF=I-D.irtf-cfrg-voprf}} service).
 For best-possible security, the Randomness Server SHOULD sample and use a new OPRF key for each
 time epoch `t`, where the length of epochs is determined by the application. The previous OPRF
 key that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter
-epochs provide more protection from Aggregation Server attacks, but also reduce the window in which data collection occurs (and hence reduce the possibility that we will have enough reports to decrypt) while increasing the reporting latency.
+epochs provide more protection from Aggregation Server attacks, but also reduce the
+window in which data collection occurs (and hence reduce the possibility that we will have
+enough reports to decrypt) while increasing the reporting latency.
 
 In this model, for further security, clients SHOULD sample their randomness in epoch `t` and
 then send it to the Aggregation Server in `t+1` (after the Randomness Server has rotated their
@@ -558,6 +619,13 @@ If configured otherwise, clients can upload reports to the Aggregation Server us
 anonymizing proxy service such as {{Tor}}. However, use of OHTTP is likely to be the most efficient
 way to achieve oblivious submission.
 
+## Malicious Clients
+
+Malicious clients can perform a Sybil attack on the system by sending bogus reports to the Aggregation
+Server. A bogus report is one that will cause secret share recovery to fail. Aggregation Servers can
+limit the impact of such clients by using higher-layer defences such as identity-based
+certification {{Sybil}}.
+
 ## Malicious Aggregation Server
 
 ### Dictionary Attacks {#dictionary-attacks}
@@ -577,7 +645,7 @@ consequence of building any threshold aggregation system. This system cannot pro
 comprehensive protection against such attacks. The time window in which such attacks can
 occur is restricted by rotating the VOPRF key ({{sec-randomness-sampling}}). Such attacks
 can also be limited in scope by using higher-layer defences such as identity-based
-certification {{Sybil}}, which STAR is compatible with.
+certification {{Sybil}}.
 
 ## Leakage and Failure Model {#leakage}
 
