@@ -213,7 +213,6 @@ Finally, this specification makes use of the following shared APIs and parameter
   This function can raise a DeserializeError upon failure; see {{OPRF, Section 2.1}}
   for more details.
 - Noe: The size of a serialized OPRF group element output from SerializeElement.
-- Nok: The size of an OPRF private key as output from DeriveKeyPair.
 
 This specification uses the base (non-verifiable) OPRF from {{OPRF, Section 3}} with the
 OPRF(ristretto255, SHA-512) as defined in {{OPRF, Section 4.1.1}}.
@@ -394,7 +393,7 @@ An example request is shown below.
 :path = /
 accept = message/star-randomness-response
 content-type = message/star-randomness-response
-content-length = Ne
+content-length = Noe
 
 <Bytes containing a serialized blinded element>
 ~~~
@@ -423,7 +422,7 @@ response is below.
 ~~~
 :status = 200
 content-type = message/star-randomness-response
-content-length = Ne
+content-length = Noe
 
 <Bytes containing a serialized evaluated element>
 ~~~
