@@ -28,6 +28,8 @@ author:
 
 normative:
 
+  GCM: DOI.10.6028/NIST.SP.800-38D
+
 informative:
   STAR:
     title: "STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting"
@@ -238,17 +240,41 @@ It has the following API and parameters:
 
 - `Seal(key, nonce, aad, pt)`: Encrypt and authenticate plaintext
   `pt` with associated data `aad` using symmetric key `key` and nonce
-  `nonce`, yielding ciphertext and tag `ct`. This function
-    can raise a `MessageLimitReachedError` upon failure.
+  `nonce`, yielding ciphertext and tag `ct`.
 - `Open(key, nonce, aad, ct)`: Decrypt ciphertext and tag `ct` using
   associated data `aad` with symmetric key `key` and nonce `nonce`,
   returning plaintext message `pt`. This function can raise an
-  `OpenError` or `MessageLimitReachedError` upon failure.
+  `OpenError` upon failure.
 - `Nk`: The length in bytes of a key for this algorithm.
 - `Nn`: The length in bytes of a nonce for this algorithm.
 - `Nt`: The length in bytes of the authentication tag for this algorithm.
 
-[[OPEN ISSUE: specify which KCAEAD to use]]
+This specification uses a KCAEAD built on AES-128-GCM {{GCM}}, HKDF-SHA256 {{HKDF}}, and
+HMAC-SHA256 {{!HMAC=RFC2104}}. In particular, Nk = 16, Nn = 12, and Nt = 16. The Seal
+and Open functions are implemented as follows.
+
+~~~~~
+def Seal(key, nonce, aad, pt):
+  key_prk = Extract(nil, key)
+  aead_key = Expand(key_prk, "aead", Nk)
+  hmac_key = Expand(key_prk, "hmac", 32) // 32 bytes for SHA-256
+
+  ct = AES-128-GCM-Seal(key=aead_key, nonce=nonce, aad=aad, pt=pt)
+  tag = HMAC(key=hmac_key, message=ct)
+  return ct || tag
+
+def Open(key, nonce, aad, ct_and_tag):
+  key_prk = Extract(nil, key)
+  aead_key = Expand(key_prk, "aead", Nk)
+  hmac_key = Expand(key_prk, "hmac", 32) // 32 bytes for SHA-256
+
+  ct || tag = ct_and_tag
+  expected_tag = HMAC(key=hmac_key, message=ct)
+  if !constant_time_equal(expected_tag, tag):
+    raise OpenError
+  pt = AES-128-GCM-Open(key=aead_key, nonce=nonce, aad=aad, ct=ct) // This can raise an OpenError
+  return pt
+~~~~~
 
 # System Overview
 
