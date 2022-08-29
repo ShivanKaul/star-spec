@@ -349,7 +349,7 @@ Clients sample this randomness by running an OPRF protocol with the Randomness S
 This section describes how the Randomness Server is configured and then how clients
 interact with it for computing the randomness.
 
-### Configuration
+### Configuration {#randomness-configuration}
 
 STAR clients are configured with a Randomness Server URI. Clients use this URI
 to send HTTP messages to the Randomness Server to complete the protocol. As an example,
