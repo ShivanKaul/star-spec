@@ -765,4 +765,4 @@ This document has no IANA actions.
 # Acknowledgments
 {:numbered="false"}
 
-The authors would like to thank the authors of the original {{STAR}} paper, which forms the basis for this document.
+The authors would like to thank the authors of the original {{STAR}} paper, which forms the basis for this document, as well as the following contributors: Christopher A. Wood.
