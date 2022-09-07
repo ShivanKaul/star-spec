@@ -234,15 +234,15 @@ This specification uses HKDF-SHA256 {{!HKDF=RFC5869}} as the KDF function, where
 ## Key-Committing Authenticated Encryption with Associated Data {#deps-aead}
 
 A Key-Committing Authenticated Encryption with Associated Data (KCAEAD) scheme is an algorithm
-for encrypting and authenticating plaintext with some additional auxiliary data.
+for encrypting and authenticating plaintext with some additional data.
 It has the following API and parameters:
 
 - `Seal(key, nonce, aad, pt)`: Encrypt and authenticate plaintext
-  `pt` with associated data `aad` using symmetric key `key` and nonce
-  `nonce`, yielding ciphertext and tag `ct`.
-- `Open(key, nonce, aad, ct)`: Decrypt ciphertext and tag `ct` using
-  associated data `aad` with symmetric key `key` and nonce `nonce`,
-  returning plaintext message `pt`. This function can raise an
+  `"pt"` with associated data `"aad"` using symmetric key `"key"` and nonce
+  `"nonce"`, yielding ciphertext `"ct"` and tag `"tag"`.
+- `Open(key, nonce, aad, ct)`: Decrypt `"ct"` and tag `"tag"` using
+  associated data `"aad"` with symmetric key `"key"` and nonce `"nonce"`,
+  returning plaintext message `"pt"`. This function can raise an
   `OpenError` upon failure.
 - `Nk`: The length in bytes of a key for this algorithm.
 - `Nn`: The length in bytes of a nonce for this algorithm.
