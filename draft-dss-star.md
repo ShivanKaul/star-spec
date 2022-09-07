@@ -488,7 +488,7 @@ Finally, the client constructs a report consisting of `encrypted_report`, `rand_
 and `tag`, and sends this to the Anonymizing Server in the subsequent epoch, i.e., after
 the Randomness Server has rotated its OPRF key.
 
-[[OPEN ISSUE: how does the client know when this rotation happens?]]
+[[OPEN ISSUE: how does the client know when this rotation happens? Use a VOPRF.]]
 
 ```
 struct {
