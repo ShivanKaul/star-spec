@@ -68,6 +68,13 @@ informative:
       - ins: W. Dai
       - ins: P. Rogaway
 
+  Shamir:
+    title: "How to share a secret"
+    date: 1979-11-01
+    target: "https://dl.acm.org/doi/10.1145/359168.359176"
+    author:
+      - ins: A. Shamir
+
   Poplar:
     title: "Lightweight Techniques for Private Heavy Hitters"
     date: 2022-01-04
@@ -171,17 +178,50 @@ A threshold secret sharing scheme with the following important properties:
 - Authenticity: Combining at least k = REPORT_THRESHOLD shares will only succeed if all
   shares correspond to the same underlying secret. Otherwise, it fails.
 
-A threshold secret sharing scheme with these properties has the following syntax:
+A threshold secret sharing scheme with these properties has the following API syntax:
 
-- Share(k, n, msg, rand, tag): Produce a k-out-of-n share of the secret `msg` bound to
-  the auxiliary data `tag` using randomness `rand`. The values k and n are integers,
-  and `msg`, `rand`, and `tag` are byte strings.
-- Recover(share_set): Combine the secret shares in `share_set`, which is of size at
+- Share(k, n, msg, rand, tag): Produce a k-out-of-n share of the secret
+  `x` using randomness `rand`. The values k and n are integers,
+  and `x` and `rand` are byte strings.
+- Recover(k, n, share_set): Combine the secret shares in `share_set`, which is of size at
   least k, and recover the corresponding message `msg`. If recovery fails, this function
   returns an error.
 - Nshare: The size in bytes of a secret share value.
 
-[[OPEN ISSUE: specify adept secret sharing here]]
+We use traditional Shamir secret sharing (SSS) {{Shamir}} for
+implementing the sharing scheme. This functionality is implemented using
+a finite field `FFp = GF(p)`, where the order `p` is a large enough
+power-of-two or prime (e.g. of length greater than 32 bits). Note that
+(SSS) is unconditionally secure, and thus the size of the field is not
+important from a security perspective.
+
+[[OPEN ISSUE: is this size field sufficient for all applications]]
+
+We now describe the implementation of the API functions above. We
+require internal usage of the following functions:
+
+- `hash_to_field(x, n)` from {{!H2C=I-D.irtf-cfrg-hash-to-curve, Section 5}}
+  for hashing `x` to `n` finite field elements in GF(p).
+- `polynomial_interpolation(points)` from
+  {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.3}} for constructing a
+  polynomial of degree `N-1` from the set `points` of size `N`.
+
+~~~~~
+def Share(k, x, rand):
+  poly = [hash_to_field(x, 1)]
+  poly.extend(hash_to_field(rand, k-1))
+  r = FFp.random()
+  share = 0
+  for i in 0..k
+    share += poly[i] * (rand^i)
+  return share
+
+def Recover(k, share_set):
+  if share_set.length < k:
+    raise RecoveryFailedError
+  poly = polynomial_interpolation(share_set)
+  return poly[0]
+~~~~~
 
 ## Oblivious Pseudorandom Function {#deps-oprf}
 
