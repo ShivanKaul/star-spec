@@ -181,9 +181,8 @@ A threshold secret sharing scheme with the following important properties:
 A threshold secret sharing scheme with these properties has the following API syntax:
 
 - Share(k, n, msg, rand, tag): Produce a k-out-of-n share of the secret
-  `x` using randomness `rand`. The values k and n are integers,
-  and `x` and `rand` are byte strings.
-- Recover(k, n, share_set): Combine the secret shares in `share_set`, which is of size at
+  `x` using randomness `rand`. The value k is an integer, and `msg` and `rand` are byte strings.
+- Recover(k, share_set): Combine the secret shares in `share_set`, which is of size at
   least k, and recover the corresponding message `msg`. If recovery fails, this function
   returns an error.
 - Nshare: The size in bytes of a secret share value.
@@ -192,7 +191,7 @@ We use traditional Shamir secret sharing (SSS) {{Shamir}} for
 implementing the sharing scheme. This functionality is implemented using
 a finite field `FFp = GF(p)`, where the order `p` is a large enough
 power-of-two or prime (e.g. of length greater than 32 bits). Note that
-(SSS) is unconditionally secure, and thus the size of the field is not
+SSS is unconditionally secure, and thus the size of the field is not
 important from a security perspective.
 
 [[OPEN ISSUE: is this size field sufficient for all applications]]
