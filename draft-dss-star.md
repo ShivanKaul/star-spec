@@ -86,6 +86,13 @@ informative:
       - ins: N. Gilboa
       - ins: Y. Ishai
 
+  SGCM:
+    title: "SGCM: The Sophie Germain Counter Mode"
+    date: 2011-11-04
+    target: "https://eprint.iacr.org/2011/326"
+    author:
+      - ins: M-J. O. Saarinen
+
   Sybil:
     title: "The Sybil Attack"
     date: 2002-10-10
@@ -187,20 +194,33 @@ A threshold secret sharing scheme with these properties has the following API sy
   returns an error.
 - Nshare: The size in bytes of a secret share value.
 
+### Finite field choice
+
 We use traditional Shamir secret sharing (SSS) {{Shamir}} for
 implementing the sharing scheme. This functionality is implemented using
-a finite field `FFp = GF(p)`, where the order `p` is a large enough
+a finite (Galois) field `FFp = GF(p)`, where the order `p` is a large enough
 power-of-two or prime (e.g. of length greater than 32 bits). Note that
 SSS is unconditionally secure, and thus the size of the field is not
-important from a security perspective.
+important from a security perspective. As such we choose the following
+prime:
 
-[[OPEN ISSUE: is this size field sufficient for all applications]]
+~~~~
+p = 2^(128) + 1451 = 340282366920938463463374607431768223907
+~~~~
+
+The value of `p` above is a well-known "safe prime" that has been
+specified for usage with 128-bit Galois fields in the past {{SGCM}}.
+
+### API implementation
 
 We now describe the implementation of the API functions above. We
 require internal usage of the following functions:
 
 - `hash_to_field(x, n)` from {{!H2C=I-D.irtf-cfrg-hash-to-curve, Section 5}}
   for hashing `x` to `n` finite field elements in GF(p).
+- `polynomial_evaluate(x, poly)` from
+  {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.1}} for evaluating a
+  given polynomial specified by `poly` on the input `x`.
 - `polynomial_interpolation(points)` from
   {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.3}} for constructing a
   polynomial of degree `N-1` from the set `points` of size `N`.
@@ -210,10 +230,7 @@ def Share(k, x, rand):
   poly = [hash_to_field(x, 1)]
   poly.extend(hash_to_field(rand, k-1))
   r = FFp.random()
-  share = 0
-  for i in 0..k
-    share += poly[i] * (rand^i)
-  return share
+  return polynomial_evaluate(r, poly)
 
 def Recover(k, share_set):
   if share_set.length < k:
