@@ -180,7 +180,7 @@ A threshold secret sharing scheme with the following important properties:
 
 A threshold secret sharing scheme with these properties has the following API syntax:
 
-- Share(k, n, msg, rand, tag): Produce a k-out-of-n share of the secret
+- Share(k, msg, rand): Produce a k-threshold share of the secret
   `x` using randomness `rand`. The value k is an integer, and `msg` and `rand` are byte strings.
 - Recover(k, share_set): Combine the secret shares in `share_set`, which is of size at
   least k, and recover the corresponding message `msg`. If recovery fails, this function
