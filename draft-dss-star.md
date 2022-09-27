@@ -68,6 +68,13 @@ informative:
       - ins: W. Dai
       - ins: P. Rogaway
 
+  Shamir:
+    title: "How to share a secret"
+    date: 1979-11-01
+    target: "https://dl.acm.org/doi/10.1145/359168.359176"
+    author:
+      - ins: A. Shamir
+
   Poplar:
     title: "Lightweight Techniques for Private Heavy Hitters"
     date: 2022-01-04
@@ -78,6 +85,13 @@ informative:
       - ins: H. Corrigan-Gibbs
       - ins: N. Gilboa
       - ins: Y. Ishai
+
+  SGCM:
+    title: "SGCM: The Sophie Germain Counter Mode"
+    date: 2011-11-04
+    target: "https://eprint.iacr.org/2011/326"
+    author:
+      - ins: M-J. O. Saarinen
 
   Sybil:
     title: "The Sybil Attack"
@@ -171,17 +185,59 @@ A threshold secret sharing scheme with the following important properties:
 - Authenticity: Combining at least k = REPORT_THRESHOLD shares will only succeed if all
   shares correspond to the same underlying secret. Otherwise, it fails.
 
-A threshold secret sharing scheme with these properties has the following syntax:
+A threshold secret sharing scheme with these properties has the following API syntax:
 
-- Share(k, n, msg, rand, tag): Produce a k-out-of-n share of the secret `msg` bound to
-  the auxiliary data `tag` using randomness `rand`. The values k and n are integers,
-  and `msg`, `rand`, and `tag` are byte strings.
-- Recover(share_set): Combine the secret shares in `share_set`, which is of size at
+- Share(k, msg, rand): Produce a k-threshold share of the secret
+  `x` using randomness `rand`. The value k is an integer, and `msg` and `rand` are byte strings.
+- Recover(k, share_set): Combine the secret shares in `share_set`, which is of size at
   least k, and recover the corresponding message `msg`. If recovery fails, this function
   returns an error.
 - Nshare: The size in bytes of a secret share value.
 
-[[OPEN ISSUE: specify adept secret sharing here]]
+### Finite field choice
+
+We use traditional Shamir secret sharing (SSS) {{Shamir}} for
+implementing the sharing scheme. This functionality is implemented using
+a finite (Galois) field `FFp = GF(p)`, where the order `p` is a large enough
+power-of-two or prime (e.g. of length greater than 32 bits). Note that
+SSS is unconditionally secure, and thus the size of the field is not
+important from a security perspective. As such we choose the following
+prime:
+
+~~~~
+p = 2^(128) + 1451 = 340282366920938463463374607431768223907
+~~~~
+
+The value of `p` above is a well-known "safe prime" that has been
+specified for usage with 128-bit Galois fields in the past {{SGCM}}.
+
+### API implementation
+
+We now describe the implementation of the API functions above. We
+require internal usage of the following functions:
+
+- `hash_to_field(x, n)` from {{!H2C=I-D.irtf-cfrg-hash-to-curve, Section 5}}
+  for hashing `x` to `n` finite field elements in GF(p).
+- `polynomial_evaluate(x, poly)` from
+  {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.1}} for evaluating a
+  given polynomial specified by `poly` on the input `x`.
+- `polynomial_interpolation(points)` from
+  {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.3}} for constructing a
+  polynomial of degree `N-1` from the set `points` of size `N`.
+
+~~~~~
+def Share(k, x, rand):
+  poly = [hash_to_field(x, 1)]
+  poly.extend(hash_to_field(rand, k-1))
+  r = FFp.random()
+  return polynomial_evaluate(r, poly)
+
+def Recover(k, share_set):
+  if share_set.length < k:
+    raise RecoveryFailedError
+  poly = polynomial_interpolation(share_set)
+  return poly[0]
+~~~~~
 
 ## Oblivious Pseudorandom Function {#deps-oprf}
 
