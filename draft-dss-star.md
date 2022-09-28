@@ -414,10 +414,10 @@ the Randomness Server URI might be https://randomness.example.
 The Randomness Server only needs to configure an OPRF key pair per epoch. This is
 done as follows:
 
-```
+~~~
 seed = random(32)
 (sk, pk) = DeriveKeyPair(seed, "STAR")
-```
+~~~
 
 [[OPEN ISSUE: describe HTTP API configuration]]
 
@@ -428,15 +428,15 @@ the randomness `rand`.
 
 Clients first generate the a context for invoking the OPRF protocol as follows:
 
-```
+~~~
 client_context = SetupOPRFClient(0x0001) // OPRF(ristretto255, SHA-512) ciphersuite
-```
+~~~
 
 Clients then blind their measurement using this context as follows:
 
-```
+~~~
 (blinded, blinded_element) = client_context.Blind(msg)
-```
+~~~
 
 Clients then compute `randomness_request = SerializeElement(blinded_element)` and send it
 to the Randomness Server URI in a HTTP POST message using content type "message/star-randomness-request".
@@ -457,9 +457,9 @@ content-length = Noe
 Upon receipt, the Randomness Server evaluates and returns a response.
 It does so by first creating a context for running the ORPF protocol as follows:
 
-```
+~~~
 server_context = SetupOPRFServer(0x0001, sk, pk) // OPRF(ristretto255, SHA-512) ciphersuite
-```
+~~~
 
 Here, `sk` and `pk` are private and public keys generated as described in {{randomness-configuration}}.
 
@@ -467,9 +467,9 @@ The Randomness Server then computes `blinded_element = DeserializeElement(random
 If this fails, the Randomness Server returns an error in a 4xx response to the client. Otherwise,
 the server computes:
 
-```
+~~~
 evaluated_element = server_context.Evaluate(sk, blinded_element)
-```
+~~~
 
 The Randomness Server then computes `randomness_response = SerializeElement(evaluated_element)` and
 sends it to the client using the content type "message/star-randomness-response". An example
@@ -487,9 +487,9 @@ Upon receipt, the client computes `evaluated_element = DeserializeElement(random
 If this fails, the client aborts the protocol. Otherwise, the client
 finalizes the OPRF protocol to compute the output `rand` as follows:
 
-```
+~~~
 rand = client_context.Finalize(msg, blind, evaluated_element)
-```
+~~~
 
 ## Reporting Phase {#client-message}
 
@@ -512,7 +512,7 @@ This reporting protocol works as follows. First, the client stretches `rand` int
 `key_seed`, `share_coins`, and `tag`, and additionally derives an KCAEAD key and nonce
 from `key_seed`.
 
-```
+~~~
 // Randomness derivation
 rand_prk = Extract(nil, rand)
 key_seed = Expand(rand_prk, "key_seed", 16)
@@ -523,22 +523,22 @@ tag = Expand(rand_prk, "tag", 16)
 key_prk = Extract(nil, key_seed)
 key = Expand(key_prk, "key", Nk)
 nonce = Expand(key_prk, "nonce", Nn)
-```
+~~~
 
 The client then generates a secret share of `key_seed` using `share_coins` as randomness as follows:
 
-```
-rand_share = Share(REPORT_THRESHOLD, TBD, key_seed, share_coins, nil)
-```
+~~~
+rand_share = Share(REPORT_THRESHOLD, key_seed, share_coins)
+~~~
 
 [[OPEN ISSUE: what should N be for the TSS scheme?]]
 
 The client then encrypts `msg` and `aux` using the KCAEAD key and nonce as follows:
 
-```
+~~~
 report_data = msg || aux
 encrypted_report = Seal(key, nonce, nil, report_data)
-```
+~~~
 
 Finally, the client constructs a report consisting of `encrypted_report`, `rand_share`,
 and `tag`, and sends this to the Anonymizing Server in the subsequent epoch, i.e., after
@@ -546,13 +546,13 @@ the Randomness Server has rotated its OPRF key.
 
 [[OPEN ISSUE: how does the client know when this rotation happens? Use a VOPRF.]]
 
-```
+~~~
 struct {
   opaque encrypted_report<1..2^16-1>;
   opaque rand_share[Nshare];
   opaque tag[16];
 } Report;
-```
+~~~
 
 Specifically, Clients send a Report to the Aggregation Server using an HTTP POST message
 with content type "message/star-report". An example message is below.
@@ -581,9 +581,9 @@ denote a set of at least REPORT_THRESHOLD reports that have a matching `tag` val
 Given this set, the Aggregation Server begins by running the secret share recovery algoritm
 as follows:
 
-```
+~~~
 key_seed = Recover(report_set)
-```
+~~~
 
 If this fails, the Aggregation Server chooses a new candidate report share set and
 reruns the aggregation process.
@@ -593,18 +593,18 @@ reruns the aggregation process.
 Otherwise, the Aggregation Server derives the same KCAEAD key and nonce from `key_seed` to
 decrypt each of the report ciphertexts in `report_set`.
 
-```
+~~~
 key_prk = Extract(nil, key_seed)
 key = Expand(key_prk, "key", Nk)
 nonce = Expand(key_prk, "nonce", Nn)
-```
+~~~
 
 Each report ciphertext is decrypted as follows:
 
-```
-report_data = Seal(key, nonce, nil, ct)
+~~~
+report_data = Open(key, nonce, nil, ct)
 msg || aux = report_data
-```
+~~~
 
 If this fails for any report, the Aggregation Server chooses a new candidate report share set and
 reruns the aggregation process. Otherwise, the Aggregation Server then outputs `msg` and each of
