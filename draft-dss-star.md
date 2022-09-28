@@ -546,7 +546,7 @@ nonce = Expand(key_prk, "nonce", Nn)
 Each report ciphertext is decrypted as follows:
 
 ~~~
-report_data = Seal(key, nonce, nil, ct)
+report_data = Open(key, nonce, nil, ct)
 msg || aux = report_data
 ~~~
 
