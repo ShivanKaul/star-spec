@@ -472,7 +472,7 @@ nonce = Expand(key_prk, "nonce", Nn)
 The client then generates a secret share of `key_seed` using `share_coins` as randomness as follows:
 
 ~~~
-rand_share = Share(REPORT_THRESHOLD, TBD, key_seed, share_coins, nil)
+rand_share = Share(REPORT_THRESHOLD, key_seed, share_coins)
 ~~~
 
 [[OPEN ISSUE: what should N be for the TSS scheme?]]
