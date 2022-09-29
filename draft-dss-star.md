@@ -536,9 +536,11 @@ rand_share = Share(REPORT_THRESHOLD, key_seed, share_coins)
 The client then encrypts `msg` and `aux` using the KCAEAD key and nonce as follows:
 
 ~~~
-report_data = msg || aux
+report_data = len(msg, 4) || msg || len(aux, 4) || aux
 encrypted_report = Seal(key, nonce, nil, report_data)
 ~~~
+
+The function `len(x, n)` encodes the length of input `x` as an `n`-byte big-endian integer.
 
 Finally, the client constructs a report consisting of `encrypted_report`, `rand_share`,
 and `tag`, and sends this to the Anonymizing Server in the subsequent epoch, i.e., after
@@ -603,8 +605,9 @@ Each report ciphertext is decrypted as follows:
 
 ~~~
 report_data = Open(key, nonce, nil, ct)
-msg || aux = report_data
 ~~~
+
+The message `msg` and auxiliary data `aux` are then parsed from `report_data`.
 
 If this fails for any report, the Aggregation Server chooses a new candidate report share set and
 reruns the aggregation process. Otherwise, the Aggregation Server then outputs `msg` and each of
