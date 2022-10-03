@@ -239,25 +239,26 @@ def Recover(k, share_set):
   return poly[0]
 ~~~~~
 
-## Oblivious Pseudorandom Function {#deps-oprf}
+## Verifiable Oblivious Pseudorandom Function {#deps-oprf}
 
-An Oblivious Pseudorandom Function (OPRF) is a two-party protocol between client and
+A Verifiable Oblivious Pseudorandom Function (VOPRF) is a two-party protocol between client and
 server for computing a PRF such that the client learns the PRF output and neither party learns
-the input of the other. This specification depends on the prime-order OPRF construction specified
-in {{!OPRF=I-D.irtf-cfrg-voprf}}, draft version -10, using the OPRF mode (0x00) from {{OPRF, Section 3.1}}.
+the input of the other. This specification depends on the prime-order VOPRF construction specified
+in {{!OPRF=I-D.irtf-cfrg-voprf}}, draft version -10, using the VOPRF mode (0x01) from {{OPRF, Section 3.1}}.
 
-The following OPRF client APIs are used:
+The following VOPRF client APIs are used:
 
 - Blind(element): Create and output (`blind`, `blinded_element`), consisting of a blinded
   representation of input `element`, denoted `blinded_element`, along with a value to revert
   the blinding process, denoted `blind`.
-- Finalize(element, blind, evaluated_element): Finalize the OPRF evaluation using input `element`,
-  random inverter `blind`, and evaluation output `evaluated_element`, yielding output `oprf_output`.
+- Finalize(element, blind, evaluated_element, proof): Finalize the OPRF evaluation using input `element`,
+  random inverter `blind`, evaluation output `evaluated_element`, and proof `proof`,
+  yielding output `oprf_output` or an error upon failure.
 
 Moreover, the following OPRF server APIs are used:
 
-- Evaluate(k, blinded_element): Evaluate blinded input element `blinded_element` using
-  input key `k`, yielding output element `evaluated_element`. This is equivalent to
+- BlindEvaluate(k, blinded_element): Evaluate blinded input element `blinded_element` using
+  input key `k`, yielding output element `evaluated_element` and proof `proof`. This is equivalent to
   the Evaluate function described in {{OPRF, Section 3.3.1}}, where `k` is the private key parameter.
 - DeriveKeyPair(seed, info): Derive a private and public key pair deterministically
   from a seed and info parameter, as described in {{OPRF, Section 3.2}}.
@@ -268,9 +269,15 @@ Finally, this specification makes use of the following shared APIs and parameter
 - DeserializeElement(buf): Attempt to map input byte array `buf` to an OPRF group element.
   This function can raise a DeserializeError upon failure; see {{OPRF, Section 2.1}}
   for more details.
+- SerializeScalar(scalar): Map input `scalar` to a unique byte array buf of fixed
+  length Ns bytes.
+- DeserializeScalar(buf): Attempt to map input byte array `buf` to an OPRF scalar element.
+  This function raise a DeserializeError upon failure; see {{OPRF, Section 2.1}}
+  for more details.
+- Ns: The size of a serialized OPRF scalar element output from SerializeScalar.
 - Noe: The size of a serialized OPRF group element output from SerializeElement.
 
-This specification uses the base (non-verifiable) OPRF from {{OPRF, Section 3}} with the
+This specification uses the verifiable OPRF from {{OPRF, Section 3}} with the
 OPRF(ristretto255, SHA-512) as defined in {{OPRF, Section 4.1.1}}.
 
 ## Key Derivation Function {#deps-kdf}
@@ -407,16 +414,16 @@ interact with it for computing the randomness.
 
 ### Configuration {#randomness-configuration}
 
-STAR clients are configured with a Randomness Server URI. Clients use this URI
-to send HTTP messages to the Randomness Server to complete the protocol. As an example,
-the Randomness Server URI might be https://randomness.example.
+STAR clients are configured with a Randomness Server URI and the Randomness Server public key `pkR`.
+Clients use this URI to send HTTP messages to the Randomness Server to complete the protocol.
+As an example, the Randomness Server URI might be https://randomness.example.
 
 The Randomness Server only needs to configure an OPRF key pair per epoch. This is
 done as follows:
 
 ~~~
 seed = random(32)
-(sk, pk) = DeriveKeyPair(seed, "STAR")
+(skR, pkR) = DeriveKeyPair(seed, "STAR")
 ~~~
 
 [[OPEN ISSUE: describe HTTP API configuration]]
@@ -429,7 +436,7 @@ the randomness `rand`.
 Clients first generate the a context for invoking the OPRF protocol as follows:
 
 ~~~
-client_context = SetupOPRFClient(0x0001) // OPRF(ristretto255, SHA-512) ciphersuite
+client_context = SetupVOPRFClient(0x0001, pkR) // OPRF(ristretto255, SHA-512) ciphersuite
 ~~~
 
 Clients then blind their measurement using this context as follows:
@@ -458,37 +465,53 @@ Upon receipt, the Randomness Server evaluates and returns a response.
 It does so by first creating a context for running the ORPF protocol as follows:
 
 ~~~
-server_context = SetupOPRFServer(0x0001, sk, pk) // OPRF(ristretto255, SHA-512) ciphersuite
+server_context = SetupVOPRFServer(0x0001, skR, pkR) // OPRF(ristretto255, SHA-512) ciphersuite
 ~~~
 
-Here, `sk` and `pk` are private and public keys generated as described in {{randomness-configuration}}.
+Here, `skR` and `pkR` are private and public keys generated as described in {{randomness-configuration}}.
 
 The Randomness Server then computes `blinded_element = DeserializeElement(randomness_request)`.
 If this fails, the Randomness Server returns an error in a 4xx response to the client. Otherwise,
 the server computes:
 
 ~~~
-evaluated_element = server_context.Evaluate(sk, blinded_element)
+evaluated_element, proof = server_context.BlindEvaluate(sk, blinded_element)
 ~~~
 
-The Randomness Server then computes `randomness_response = SerializeElement(evaluated_element)` and
-sends it to the client using the content type "message/star-randomness-response". An example
-response is below.
+The Randomness Server then serializes the evaluation output and proof to produce a randomness response
+as follows:
+
+~~~
+evaluated_element_enc = SerializeElement(evaluated_element)
+proof_enc = SerializeScalar(proof[0]) || SerializeScalar(proof[1])
+randomness_response = evaluated_element_enc || proof_enc
+~~~
+
+This response is then sent to the client using the content type "message/star-randomness-response".
+An example response is below.
 
 ~~~
 :status = 200
 content-type = message/star-randomness-response
 content-length = Noe
 
-<Bytes containing a serialized evaluated element>
+<Bytes containing randomness_response>
 ~~~
 
-Upon receipt, the client computes `evaluated_element = DeserializeElement(randomness_response)`.
-If this fails, the client aborts the protocol. Otherwise, the client
+Upon receipt, the client computes parses `randomness_response` to recover the evaluated element
+and proof as follows:
+
+~~~
+evaluated_element_enc || proof_enc = parse(randomness_response)
+evaluated_element = DeserializeElement(evaluated_element_enc)
+proof = [DeserializeScalar(proof_enc[0:Ns]), DeserializeScalar(proof_enc[Ns:])]
+~~~
+
+If any of these steps fail, the client aborts the protocol. Otherwise, the client
 finalizes the OPRF protocol to compute the output `rand` as follows:
 
 ~~~
-rand = client_context.Finalize(msg, blind, evaluated_element)
+rand = client_context.Finalize(msg, blind, evaluated_element, proof)
 ~~~
 
 ## Reporting Phase {#client-message}
@@ -545,8 +568,6 @@ The function `len(x, n)` encodes the length of input `x` as an `n`-byte big-endi
 Finally, the client constructs a report consisting of `encrypted_report`, `rand_share`,
 and `tag`, and sends this to the Anonymizing Server in the subsequent epoch, i.e., after
 the Randomness Server has rotated its OPRF key.
-
-[[OPEN ISSUE: how does the client know when this rotation happens? Use a VOPRF.]]
 
 ~~~
 struct {
