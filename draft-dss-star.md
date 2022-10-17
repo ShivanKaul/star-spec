@@ -213,7 +213,7 @@ The value of `p` above is a well-known "safe prime" that has been
 specified for usage with 128-bit Galois fields in the past {{SGCM}}.
 
 With these parameters, Share and Recover are implemented as follows,
-where Nshare = 2*Ns and Ncommitment = 32.
+where Nshare = 2*Nscalar and Ncommitment = 32.
 
 ~~~~~
 def Share(k, secret, rand):
@@ -249,9 +249,9 @@ def Recover(k, share_set):
 
 The dependencies for Share and Recover are as follows:
 
-- `serialize_scalar(s)` encode the input scalar `s`, producing a Ns-length byte string.
-- `deserialize_scalar(s_enc)` attempts to decode the byte string `s_enc` to a scalar `s`,
-  producing a scalar element in FFp if successful or raising an error if this fails.
+- `serialize_scalar(s)` encode the input scalar `s`, producing a Nscalar-length byte string.
+- `deserialize_scalar(s_enc)` attempts to decode the Nscalar-length byte string `s_enc` to a
+  scalar `s`, producing a scalar element in FFp if successful or raising an error if this fails.
 - `hash_to_field(x, n)` from {{!H2C=I-D.irtf-cfrg-hash-to-curve, Section 5}}
   for hashing `x` to `n` finite field elements in GF(p).
 - `polynomial_evaluate(x, poly)` from
