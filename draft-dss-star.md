@@ -187,22 +187,23 @@ A threshold secret sharing scheme with the following important properties:
 
 A threshold secret sharing scheme with these properties has the following API syntax:
 
-- Share(k, msg, rand): Produce a k-threshold share of the secret
-  `x` using randomness `rand`. The value k is an integer, and `msg` and `rand` are byte strings.
-- Recover(k, share_set): Combine the secret shares in `share_set`, which is of size at
-  least k, and recover the corresponding message `msg`. If recovery fails, this function
-  returns an error.
+- Share(k, secret, rand): Produce a k-threshold share `secret` using randomness `rand`,
+  along with a commitment to the secret, each of size `Nshare` and `Ncommitment` bytes long.
+  The value k is an integer, and `secret`  and `rand` are byte strings.
+- Recover(k, share_set): Combine the secret shares in `share_set`, each of which correspond
+  to the same secret share commitment, which is of size at least k, and recover the corresponding
+  message `msg`. If recovery fails, this function returns an error.
 - Nshare: The size in bytes of a secret share value.
+- Ncommitment: The size in bytes of a secret share commitment value.
 
-### Finite field choice
+### Unverifiable Secret Sharing
 
-We use traditional Shamir secret sharing (SSS) {{Shamir}} for
-implementing the sharing scheme. This functionality is implemented using
+This section specifies traditional (unverifiable) Shamir secret sharing (SSS) {{Shamir}}
+for implementing the sharing scheme. This functionality is implemented using
 a finite (Galois) field `FFp = GF(p)`, where the order `p` is a large enough
 power-of-two or prime (e.g. of length greater than 32 bits). Note that
 SSS is unconditionally secure, and thus the size of the field is not
-important from a security perspective. As such we choose the following
-prime:
+important from a security perspective. As such we choose the following prime:
 
 ~~~~
 p = 2^(128) + 1451 = 340282366920938463463374607431768223907
@@ -211,11 +212,46 @@ p = 2^(128) + 1451 = 340282366920938463463374607431768223907
 The value of `p` above is a well-known "safe prime" that has been
 specified for usage with 128-bit Galois fields in the past {{SGCM}}.
 
-### API implementation
+With these parameters, Share and Recover are implemented as follows,
+where Nshare = 2*Ns and Ncommitment = 32.
 
-We now describe the implementation of the API functions above. We
-require internal usage of the following functions:
+~~~~~
+def Share(k, secret, rand):
+  # Compute the share commitment
+  commitment = SHA256(secret)
 
+  # Perform secret sharing
+  poly = [hash_to_field(secret, 1)]
+  poly.extend(hash_to_field(rand, k-1))
+  x = FFp.random()
+  y = polynomial_evaluate(x, poly)
+
+  # Construct the share
+  x_enc = serialize_scalar(x)
+  y_enc = serialize_scalar(y)
+  share = x_enc || y_enc
+
+  return share, commitment
+
+def Recover(k, share_set):
+  if share_set.length < k:
+    raise RecoveryFailedError
+
+  points = []
+  for share in share_set:
+    x = deserialize_scalar(share[0:Ns])
+    y = deserialize_scalar(share[Ns:])
+    points.append((x, y))
+
+  poly = polynomial_interpolation(points)
+  return poly[0]
+~~~~~
+
+The dependencies for Share and Recover are as follows:
+
+- `serialize_scalar(s)` encode the input scalar `s`, producing a Ns-length byte string.
+- `deserialize_scalar(s_enc)` attempts to decode the byte string `s_enc` to a scalar `s`,
+  producing a scalar element in FFp if successful or raising an error if this fails.
 - `hash_to_field(x, n)` from {{!H2C=I-D.irtf-cfrg-hash-to-curve, Section 5}}
   for hashing `x` to `n` finite field elements in GF(p).
 - `polynomial_evaluate(x, poly)` from
@@ -223,21 +259,9 @@ require internal usage of the following functions:
   given polynomial specified by `poly` on the input `x`.
 - `polynomial_interpolation(points)` from
   {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.3}} for constructing a
-  polynomial of degree `N-1` from the set `points` of size `N`.
-
-~~~~~
-def Share(k, x, rand):
-  poly = [hash_to_field(x, 1)]
-  poly.extend(hash_to_field(rand, k-1))
-  r = FFp.random()
-  return polynomial_evaluate(r, poly)
-
-def Recover(k, share_set):
-  if share_set.length < k:
-    raise RecoveryFailedError
-  poly = polynomial_interpolation(share_set)
-  return poly[0]
-~~~~~
+  polynomial of degree `N-1` from the set `points` of size `N` and returning
+  the coefficient list, where the 0-th coefficient of the polynomial is the
+  first element in the output list.
 
 ## Verifiable Oblivious Pseudorandom Function {#deps-oprf}
 
@@ -532,15 +556,13 @@ See {{proxy-options}} for more details.
 ### Reporting Protocol
 
 This reporting protocol works as follows. First, the client stretches `rand` into three values
-`key_seed`, `share_coins`, and `tag`, and additionally derives an KCAEAD key and nonce
-from `key_seed`.
+`key_seed` and `share_coins`, and additionally derives an KCAEAD key and nonce from `key_seed`.
 
 ~~~
 // Randomness derivation
 rand_prk = Extract(nil, rand)
 key_seed = Expand(rand_prk, "key_seed", 16)
 share_coins = Expand(rand_prk, "share_coins", 16)
-tag = Expand(rand_prk, "tag", 16)
 
 // Symmetric encryption key derivation
 key_prk = Extract(nil, key_seed)
@@ -551,7 +573,7 @@ nonce = Expand(key_prk, "nonce", Nn)
 The client then generates a secret share of `key_seed` using `share_coins` as randomness as follows:
 
 ~~~
-rand_share = Share(REPORT_THRESHOLD, key_seed, share_coins)
+random_share, share_commitment = Share(REPORT_THRESHOLD, key_seed, share_coins)
 ~~~
 
 [[OPEN ISSUE: what should N be for the TSS scheme?]]
@@ -565,15 +587,15 @@ encrypted_report = Seal(key, nonce, nil, report_data)
 
 The function `len(x, n)` encodes the length of input `x` as an `n`-byte big-endian integer.
 
-Finally, the client constructs a report consisting of `encrypted_report`, `rand_share`,
-and `tag`, and sends this to the Anonymizing Server in the subsequent epoch, i.e., after
-the Randomness Server has rotated its OPRF key.
+Finally, the client constructs a report consisting of `encrypted_report` and `random_share`,
+as well as `share_commitment`, and sends this to the Anonymizing Server in the subsequent
+epoch, i.e., after the Randomness Server has rotated its OPRF key.
 
 ~~~
 struct {
   opaque encrypted_report<1..2^16-1>;
-  opaque rand_share[Nshare];
-  opaque tag[16];
+  opaque random_share[Nshare];
+  opaque share_commitment[Ncommitment];
 } Report;
 ~~~
 
@@ -598,8 +620,8 @@ for different types of proxy options.
 
 Aggregation is the final phase of STAR. It happens offline and does not require any
 communication between different STAR entities. It proceeds as follows. First, the
-Aggregation Server groups reports together based on their `tag` value. Let `report_set`
-denote a set of at least REPORT_THRESHOLD reports that have a matching `tag` value.
+Aggregation Server groups reports together based on their `share_commitment` value. Let `report_set`
+denote a set of at least REPORT_THRESHOLD reports that have a matching `share_commitment` value.
 
 Given this set, the Aggregation Server begins by running the secret share recovery algoritm
 as follows:
