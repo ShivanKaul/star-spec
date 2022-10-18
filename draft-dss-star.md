@@ -189,7 +189,7 @@ A threshold secret sharing scheme with these properties has the following API sy
 
 - Share(k, secret, rand): Produce a k-threshold share `secret` using randomness `rand`,
   along with a commitment to the secret, each of size `Nshare` and `Ncommitment` bytes long.
-  The value k is an integer, and `secret`  and `rand` are byte strings.
+  The value `k` is an integer, and `secret`  and `rand` are byte strings.
 - Recover(k, share_set): Combine the secret shares in `share_set`, each of which correspond
   to the same secret share commitment, which is of size at least `k`, and recover the corresponding
   message `secret`. If recovery fails, this function returns an error.
