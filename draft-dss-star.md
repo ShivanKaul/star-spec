@@ -192,7 +192,7 @@ A threshold secret sharing scheme with these properties has the following API sy
   The value k is an integer, and `secret`  and `rand` are byte strings.
 - Recover(k, share_set): Combine the secret shares in `share_set`, each of which correspond
   to the same secret share commitment, which is of size at least k, and recover the corresponding
-  message `msg`. If recovery fails, this function returns an error.
+  message `secret`. If recovery fails, this function returns an error.
 - Nshare: The size in bytes of a secret share value.
 - Ncommitment: The size in bytes of a secret share commitment value.
 
