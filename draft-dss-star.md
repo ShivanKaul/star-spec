@@ -543,7 +543,7 @@ values associated with each of the REPORT_THRESHOLD client reports, denoted `<au
 
 In the following subsections, we describe each of the phases of STAR in more detail.
 
-## Randomness Phase
+## Randomness Phase {#randomness-phase}
 
 The randomness sampled from a client data MUST be a deterministic function of the measurement.
 Clients sample this randomness by running an OPRF protocol with the Randomness Server.
@@ -564,8 +564,6 @@ seed = random(32)
 (skR, pkR) = DeriveKeyPair(seed, "STAR")
 ~~~
 
-[[OPEN ISSUE: describe HTTP API configuration]]
-
 ### Randomness Protocol
 
 This procedure works as follows. Let `msg` be the client's measurement to be used for deriving
@@ -584,7 +582,7 @@ Clients then blind their measurement using this context as follows:
 ~~~
 
 Clients then compute `randomness_request = OPRF.SerializeElement(blinded_element)` and send it
-to the Randomness Server URI in a HTTP POST message using content type "message/star-randomness-request".
+to the Randomness Server URI in a HTTP POST message using content type "application/star-randomness-request".
 An example request is shown below.
 
 ~~~
@@ -592,8 +590,8 @@ An example request is shown below.
 :scheme = https
 :authority = randomness.example
 :path = /
-accept = message/star-randomness-response
-content-type = message/star-randomness-response
+accept = application/star-randomness-response
+content-type = application/star-randomness-request
 content-length = Noe
 
 <Bytes containing a serialized blinded element>
@@ -625,12 +623,12 @@ proof_enc = OPRF.SerializeScalar(proof[0]) || OPRF.SerializeScalar(proof[1])
 randomness_response = evaluated_element_enc || proof_enc
 ~~~
 
-This response is then sent to the client using the content type "message/star-randomness-response".
+This response is then sent to the client using the content type "application/star-randomness-response".
 An example response is below.
 
 ~~~
 :status = 200
-content-type = message/star-randomness-response
+content-type = application/star-randomness-response
 content-length = Noe
 
 <Bytes containing randomness_response>
@@ -652,7 +650,7 @@ finalizes the OPRF protocol to compute the output `rand` as follows:
 rand = client_context.Finalize(msg, blind, evaluated_element, proof)
 ~~~
 
-## Reporting Phase {#client-message}
+## Reporting Phase {#report-phase}
 
 In the reporting phase, the client uses its measurement `msg` with auxiliary data `aux`
 and its derived randomness `rand` to produce a report for the Aggregation Server.
@@ -712,14 +710,14 @@ struct {
 ~~~
 
 Specifically, Clients send a Report to the Aggregation Server using an HTTP POST message
-with content type "message/star-report". An example message is below.
+with content type "application/star-report". An example message is below.
 
 ~~~
 :method = POST
 :scheme = https
 :authority = aggregator.example
 :path = /
-content-type = message/star-report
+content-type = application/star-report
 content-length = <Length of body>
 
 <Bytes containing a Report>
@@ -821,7 +819,7 @@ This section contains security considerations for the draft.
 ## Randomness Sampling {#sec-randomness-sampling}
 
 Deterministic randomness MUST be sampled by clients to construct their STAR report, as discussed
-in {{client-message}}. This randomness CANNOT be derived locally, and MUST be sampled from the
+in {{report-phase}}. This randomness CANNOT be derived locally, and MUST be sampled from the
 Randomness Server (that runs an {{!OPRF=I-D.irtf-cfrg-voprf}} service).
 
 For best-possible security, the Randomness Server SHOULD sample and use a new OPRF key for each
@@ -986,7 +984,238 @@ clients send the same value). Such data is supported by neither Prio, nor Poplar
 
 # IANA Considerations
 
-This document has no IANA actions.
+## Protocol Message Media Types
+
+This specification defines the following protocol messages, along with their
+corresponding media types types:
+
+- Randomness request {{randomness-phase}}: "application/star-randomness-request"
+- Randomness response {{randomness-phase}}: "application/star-randomness-response"
+- Report {{report-phase}}: "application/star-report"
+
+The definition for each media type is in the following subsections.
+
+Protocol message format evolution is supported through the definition of new
+formats that are identified by new media types.
+
+IANA [shall update / has updated] the "Media Types" registry at
+https://www.iana.org/assignments/media-types with the registration information
+in this section for all media types listed above.
+
+[OPEN ISSUE: Solicit review of these allocations from domain experts.]
+
+### "application/star-randomness-request" media type
+
+Type name:
+
+: application
+
+Subtype name:
+
+: star-randomness-request
+
+Required parameters:
+
+: N/A
+
+Optional parameters:
+
+: None
+
+Encoding considerations:
+
+: only "8bit" or "binary" is permitted
+
+Security considerations:
+
+: see {{security-considerations}}
+
+Interoperability considerations:
+
+: N/A
+
+Published specification:
+
+: this specification
+
+Applications that use this media type:
+
+: N/A
+
+Fragment identifier considerations:
+
+: N/A
+
+Additional information:
+
+: <dl>
+  <dt>Magic number(s):</dt><dd>N/A</dd>
+  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
+  <dt>File extension(s):</dt><dd>N/A</dd>
+  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
+  </dl>
+
+Person and email address to contact for further information:
+
+: see Authors' Addresses section
+
+Intended usage:
+
+: COMMON
+
+Restrictions on usage:
+
+: N/A
+
+Author:
+
+: see Authors' Addresses section
+
+Change controller:
+
+: IESG
+
+### "application/star-report" media type
+
+Type name:
+
+: application
+
+Subtype name:
+
+: star-report
+
+Required parameters:
+
+: N/A
+
+Optional parameters:
+
+: None
+
+Encoding considerations:
+
+: only "8bit" or "binary" is permitted
+
+Security considerations:
+
+: see {{security-considerations}}
+
+Interoperability considerations:
+
+: N/A
+
+Published specification:
+
+: this specification
+
+Applications that use this media type:
+
+: N/A
+
+Fragment identifier considerations:
+
+: N/A
+
+Additional information:
+
+: <dl>
+  <dt>Magic number(s):</dt><dd>N/A</dd>
+  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
+  <dt>File extension(s):</dt><dd>N/A</dd>
+  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
+  </dl>
+
+Person and email address to contact for further information:
+
+: see Authors' Addresses section
+
+Intended usage:
+
+: COMMON
+
+Restrictions on usage:
+
+: N/A
+
+Author:
+
+: see Authors' Addresses section
+
+Change controller:
+
+: IESG
+
+### "application/star-randomness-response" media type
+
+Type name:
+
+: application
+
+Subtype name:
+
+: star-randomness-response
+
+Required parameters:
+
+: N/A
+
+Optional parameters:
+
+: None
+
+Encoding considerations:
+
+: only "8bit" or "binary" is permitted
+
+Security considerations:
+
+: see {{security-considerations}}
+
+Interoperability considerations:
+
+: N/A
+
+Published specification:
+
+: this specification
+
+Applications that use this media type:
+
+: N/A
+
+Fragment identifier considerations:
+
+: N/A
+
+Additional information:
+
+: <dl>
+  <dt>Magic number(s):</dt><dd>N/A</dd>
+  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
+  <dt>File extension(s):</dt><dd>N/A</dd>
+  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
+  </dl>
+
+Person and email address to contact for further information:
+
+: see Authors' Addresses section
+
+Intended usage:
+
+: COMMON
+
+Restrictions on usage:
+
+: N/A
+
+Author:
+
+: see Authors' Addresses section
+
+Change controller:
+
+: IESG
 
 --- back
 
