@@ -132,7 +132,17 @@ Private Threshold Aggregation Reporting (STAR) {{STAR}}.
 
 {::boilerplate bcp14-tagged}
 
-The following terms are used:
+The following notation is used throughout the document.
+
+* `len(l)`: Outputs the length of input list `l`, e.g., `len([1,2,3]) = 3)`.
+* `range(a, b)`: Outputs a list of integers from `a` to `b-1` in ascending order, e.g., `range(1, 4) = [1,2,3]`.
+* `pow(a, b)`: Outputs the integer result of `a` to the power of `b`, e.g., `pow(2, 3) = 8`.
+* \|\| denotes concatenation of byte strings, i.e., `x || y` denotes the byte string `x`, immediately followed by
+  the byte string `y`, with no extra separator, yielding `xy`.
+* `str(x)`: Outputs an ASCII string encoding of the integer input `x`, e.g., `str(1) = "1"`.
+* nil denotes an empty byte string.
+
+In addition, the following terms are used:
 
 Aggregation Server:
 : An entity that would like to learn aggregated data from users.
@@ -196,39 +206,69 @@ A threshold secret sharing scheme with these properties has the following API sy
 - Nshare: The size in bytes of a secret share value.
 - Ncommitment: The size in bytes of a secret share commitment value.
 
+A threshold secret sharing scheme is built on top of the scalar field of a prime-order group `G`, where
+the order is a large prime `p`. The group operation for `G` is addition `+` with identity element `I`.
+For any elements `A` and `B` of the group `G`, `A + B = B + A` is also a member of `G`. Also, for any
+`A` in `G`, there exists an element `-A` such that `A + (-A) = (-A) + A = I`. Integers, taken modulo the group order `p`, are called
+scalars; arithmetic operations on scalars are implicitly performed modulo `p`. Since `p` is prime,
+scalars form a finite field. Scalar multiplication is equivalent to the repeated
+application of the group operation on an element `A` with itself `r-1` times, denoted as
+`ScalarMult(A, r)`. We denote the sum, difference, and product of two scalars using the `+`, `-`,
+and `*` operators, respectively. (Note that this means `+` may refer to group element addition or
+scalar addition, depending on types of the operands.) For any element `A`, `ScalarMult(A, p) = I`.
+We denote `B` as a fixed generator of the group. Scalar base multiplication is equivalent to the repeated application
+of the group operation `B` with itself `r-1` times, this is denoted as `ScalarBaseMult(r)`. The set of
+scalars corresponds to `GF(p)`, which we refer to as the scalar field. This document uses types
+`Element` and `Scalar` to denote elements of the group `G` and its set of scalars, respectively.
+We denote Scalar(x) as the conversion of integer input `x` to the corresponding Scalar value with
+the same numeric value. For example, Scalar(1) yields a Scalar representing the value 1.
+We denote equality comparison as `==` and assignment of values by `=`. Finally, it is assumed that
+group element addition, negation, and equality comparisons can be efficiently computed for
+arbitrary group elements.
+
+We now detail a number of member functions that can be invoked on `G`.
+
+- Identity(): Outputs the group identity element `I`.
+- RandomScalar(): Outputs a random `Scalar` element in GF(p), i.e., a random scalar in \[0, p - 1\].
+- HashToScalar(x, dst): Deterministically map an array of bytes `x` to a Scalar element.
+  This function is optionally parameterized by a domain separation tag dst.
+- SerializeElement(A): Maps an `Element` `A` to a canonical byte array `buf` of fixed length `Ne`. This
+  function can raise an error if `A` is the identity element of the group.
+- DeserializeElement(buf): Attempts to map a byte array `buf` to an `Element` `A`,
+  and fails if the input is not the valid canonical byte representation of an element of
+  the group. This function can raise an error if deserialization fails
+  or `A` is the identity element of the group.
+- ScalarBaseMult(k): Output the scalar multiplication between Scalar `k` and the group generator `B`.
+- SerializeScalar(s): Maps a Scalar `s` to a canonical byte array `buf` of fixed length `Ns`.
+- DeserializeScalar(buf): Attempts to map a byte array `buf` to a `Scalar` `s`.
+  This function can raise an error if deserialization fails.
+
+[[OPEN ISSUE: specify validation steps somewhere, likely cribbing from other documents]]
+
 ### Unverifiable Secret Sharing
 
 This section specifies traditional (unverifiable) Shamir secret sharing (SSS) {{Shamir}}
 for implementing the sharing scheme. This functionality is implemented using
-a finite (Galois) field `FFp = GF(p)`, where the order `p` is a large enough
-power-of-two or prime (e.g. of length greater than 32 bits). Note that
-SSS is unconditionally secure, and thus the size of the field is not
-important from a security perspective. As such we choose the following prime:
-
-~~~~
-p = 2^(128) + 1451 = 340282366920938463463374607431768223907
-~~~~
-
-The value of `p` above is a well-known "safe prime" that has been
-specified for usage with 128-bit Galois fields in the past {{SGCM}}.
-
-With these parameters, Share and Recover are implemented as follows,
-where Nshare = 2*Nscalar and Ncommitment = 32.
+ristretto255 {{!RISTRETTO=I-D.irtf-cfrg-ristretto255-decaf448}}.
+Share and Recover are implemented as follows, where Nshare = 2\*Nscalar and Ncommitment = 32.
 
 ~~~~~
 def Share(k, secret, rand):
-  # Compute the share commitment
+  # Construct the secret sharing polynomial
+  poly = [G.HashToScalar(secret, str(0))]
+  for i in range(1, k):
+    poly.extend(G.HashToScalar(rand, str(i)))
+
+  # Compute the secret commitment
   commitment = SHA256(secret)
 
-  # Perform secret sharing
-  poly = [hash_to_field(secret, 1)]
-  poly.extend(hash_to_field(rand, k-1))
-  x = FFp.random()
+  # Evaluate the polynomial at a random point
+  x = G.RandomScalar()
   y = polynomial_evaluate(x, poly)
 
   # Construct the share
-  x_enc = serialize_scalar(x)
-  y_enc = serialize_scalar(y)
+  x_enc = G.SerializeScalar(x)
+  y_enc = G.SerializeScalar(y)
   share = x_enc || y_enc
 
   return share, commitment
@@ -239,8 +279,8 @@ def Recover(k, share_set):
 
   points = []
   for share in share_set:
-    x = deserialize_scalar(share[0:Ns])
-    y = deserialize_scalar(share[Ns:])
+    x = G.DeserializeScalar(share[0:Ns])
+    y = G.DeserializeScalar(share[Ns:])
     points.append((x, y))
 
   poly = polynomial_interpolation(points)
@@ -249,11 +289,6 @@ def Recover(k, share_set):
 
 The dependencies for Share and Recover are as follows:
 
-- `serialize_scalar(s)` encode the input scalar `s`, producing a Nscalar-length byte string.
-- `deserialize_scalar(s_enc)` attempts to decode the Nscalar-length byte string `s_enc` to a
-  scalar `s`, producing a scalar element in FFp if successful or raising an error if this fails.
-- `hash_to_field(x, n)` from {{!H2C=I-D.irtf-cfrg-hash-to-curve, Section 5}}
-  for hashing `x` to `n` finite field elements in GF(p).
 - `polynomial_evaluate(x, poly)` from
   {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.1}} for evaluating a
   given polynomial specified by `poly` on the input `x`.
@@ -263,6 +298,85 @@ The dependencies for Share and Recover are as follows:
   the coefficient list, where the 0-th coefficient of the polynomial is the
   first element in the output list.
 
+### Verifiable Secret Sharing {#dep-vss}
+
+This section specifies Feldman's verifiable secret sharing (VSS) {{?Feldman=DOI.10.1109/SFCS.1987.4}}
+for implementing the sharing scheme. This functionality is implemented using
+ristretto255 {{!RISTRETTO=I-D.irtf-cfrg-ristretto255-decaf448}}.
+Share and Recover are implemented as follows, where Nshare = 2\*Nscalar and Ncommitment = k\*Ne,
+where Ne is the size of a serialized group element.
+
+~~~~~
+def Share(k, secret, rand):
+  # Construct the secret sharing polynomial
+  poly = [G.HashToScalar(secret, str(0))]
+  for i in range(1, k):
+    poly.extend(G.HashToScalar(rand, str(i)))
+
+  # Compute the secret (and polynomial) commitment
+  commitment = Commit(secret)
+
+  # Evaluate the polynomial at a random point
+  x = G.RandomScalar()
+  y = polynomial_evaluate(x, poly)
+
+  # Construct the share
+  x_enc = G.SerializeScalar(x)
+  y_enc = G.SerializeScalar(y)
+  share = x_enc || y_enc
+
+  return share, commitment
+
+def Recover(k, share_set):
+  if share_set.length < k:
+    raise RecoveryFailedError
+
+  points = []
+  for share in share_set:
+    x = G.DeserializeScalar(share[0:Ns])
+    y = G.DeserializeScalar(share[Ns:])
+    points.append((x, y))
+
+  poly = polynomial_interpolation(points)
+  return poly[0]
+~~~~~
+
+The helper functions `polynomial_evaluate` and `polynomial_interpolation` are as defined
+in the previous section. The helper function Commit is implemented as follows:
+
+~~~~~
+def Commit(poly):
+  commitment = nil
+  for coefficient in poly:
+    C_i = G.ScalarBaseMult(coefficient)
+    commitment = commitment || G.SerializeElement(C_i)
+  return commitment
+~~~~~
+
+Moreover, VSS extends the syntax of SSS to add another function, Verify, that is
+used to check that a share is correct for a given commitment. Verify is implemented
+as follows.
+
+~~~~~
+def Verify(share, commitment):
+  x = G.DeserializeScalar(share[0:Ns])
+  y = G.DeserializeScalar(share[Ns:])
+  S' = G.ScalarBaseMult(y)
+
+  if len(commitment) % Ne != 0:
+    raise Exception("Invalid commitment length")
+  num_coefficients = len(commitment) % Ne
+  commitments = []
+  for i in range(0, num_coefficients):
+    c_i = G.DeserializeElement(commitment[i*Ne:(i+1)*Ne])
+    commitments.extend(c_i)
+
+  S = G.Identity()
+  for j in range(0, num_coefficients):
+    S = S + G.ScalarMult(commitments[j], pow(x, j))
+  return S == S'
+~~~~~
+
 ## Verifiable Oblivious Pseudorandom Function {#deps-oprf}
 
 A Verifiable Oblivious Pseudorandom Function (VOPRF) is a two-party protocol between client and
@@ -270,7 +384,7 @@ server for computing a PRF such that the client learns the PRF output and neithe
 the input of the other. This specification depends on the prime-order VOPRF construction specified
 in {{!OPRF=I-D.irtf-cfrg-voprf}}, draft version -10, using the VOPRF mode (0x01) from {{OPRF, Section 3.1}}.
 
-The following VOPRF client APIs are used:
+The following VOPRF client functions are used:
 
 - Blind(element): Create and output (`blind`, `blinded_element`), consisting of a blinded
   representation of input `element`, denoted `blinded_element`, along with a value to revert
@@ -279,7 +393,7 @@ The following VOPRF client APIs are used:
   random inverter `blind`, evaluation output `evaluated_element`, and proof `proof`,
   yielding output `oprf_output` or an error upon failure.
 
-Moreover, the following OPRF server APIs are used:
+Moreover, the following OPRF server functions are used:
 
 - BlindEvaluate(k, blinded_element): Evaluate blinded input element `blinded_element` using
   input key `k`, yielding output element `evaluated_element` and proof `proof`. This is equivalent to
@@ -287,7 +401,7 @@ Moreover, the following OPRF server APIs are used:
 - DeriveKeyPair(seed, info): Derive a private and public key pair deterministically
   from a seed and info parameter, as described in {{OPRF, Section 3.2}}.
 
-Finally, this specification makes use of the following shared APIs and parameters:
+Finally, this specification makes use of the following shared functions and parameters:
 
 - SerializeElement(element): Map input `element` to a fixed-length byte array `buf`.
 - DeserializeElement(buf): Attempt to map input byte array `buf` to an OPRF group element.
@@ -469,7 +583,7 @@ Clients then blind their measurement using this context as follows:
 (blinded, blinded_element) = client_context.Blind(msg)
 ~~~
 
-Clients then compute `randomness_request = SerializeElement(blinded_element)` and send it
+Clients then compute `randomness_request = OPRF.SerializeElement(blinded_element)` and send it
 to the Randomness Server URI in a HTTP POST message using content type "message/star-randomness-request".
 An example request is shown below.
 
@@ -494,7 +608,7 @@ server_context = SetupVOPRFServer(0x0001, skR, pkR) // OPRF(ristretto255, SHA-51
 
 Here, `skR` and `pkR` are private and public keys generated as described in {{randomness-configuration}}.
 
-The Randomness Server then computes `blinded_element = DeserializeElement(randomness_request)`.
+The Randomness Server then computes `blinded_element = OPRF.DeserializeElement(randomness_request)`.
 If this fails, the Randomness Server returns an error in a 4xx response to the client. Otherwise,
 the server computes:
 
@@ -506,8 +620,8 @@ The Randomness Server then serializes the evaluation output and proof to produce
 as follows:
 
 ~~~
-evaluated_element_enc = SerializeElement(evaluated_element)
-proof_enc = SerializeScalar(proof[0]) || SerializeScalar(proof[1])
+evaluated_element_enc = OPRF.SerializeElement(evaluated_element)
+proof_enc = OPRF.SerializeScalar(proof[0]) || OPRF.SerializeScalar(proof[1])
 randomness_response = evaluated_element_enc || proof_enc
 ~~~
 
@@ -527,8 +641,8 @@ and proof as follows:
 
 ~~~
 evaluated_element_enc || proof_enc = parse(randomness_response)
-evaluated_element = DeserializeElement(evaluated_element_enc)
-proof = [DeserializeScalar(proof_enc[0:Ns]), DeserializeScalar(proof_enc[Ns:])]
+evaluated_element = OPRF.DeserializeElement(evaluated_element_enc)
+proof = [OPRF.DeserializeScalar(proof_enc[0:Ns]), OPRF.DeserializeScalar(proof_enc[Ns:])]
 ~~~
 
 If any of these steps fail, the client aborts the protocol. Otherwise, the client
@@ -576,8 +690,6 @@ The client then generates a secret share of `key_seed` using `share_coins` as ra
 random_share, share_commitment = Share(REPORT_THRESHOLD, key_seed, share_coins)
 ~~~
 
-[[OPEN ISSUE: what should N be for the TSS scheme?]]
-
 The client then encrypts `msg` and `aux` using the KCAEAD key and nonce as follows:
 
 ~~~
@@ -620,8 +732,11 @@ for different types of proxy options.
 
 Aggregation is the final phase of STAR. It happens offline and does not require any
 communication between different STAR entities. It proceeds as follows. First, the
-Aggregation Server groups reports together based on their `share_commitment` value. Let `report_set`
-denote a set of at least REPORT_THRESHOLD reports that have a matching `share_commitment` value.
+Aggregation Server groups reports together based on their `share_commitment` value.
+If applicable, the Aggregation Server also verifies that each share commitment is correct,
+i.e., by invoking the Verify function on each `share` and `share_commitment` pair in
+candidate set of reports. Let `report_set` denote a set of at least REPORT_THRESHOLD
+reports that have a matching `share_commitment` value.
 
 Given this set, the Aggregation Server begins by running the secret share recovery algoritm
 as follows:
@@ -631,9 +746,7 @@ key_seed = Recover(report_set)
 ~~~
 
 If this fails, the Aggregation Server chooses a new candidate report share set and
-reruns the aggregation process.
-
-[[OPEN ISSUE: how does the server choose new candidate sets when share recovery fails?]]
+reruns the aggregation process. See {{bad-reports}} for more details.
 
 Otherwise, the Aggregation Server derives the same KCAEAD key and nonce from `key_seed` to
 decrypt each of the report ciphertexts in `report_set`.
@@ -653,10 +766,8 @@ report_data = Open(key, nonce, nil, ct)
 The message `msg` and auxiliary data `aux` are then parsed from `report_data`.
 
 If this fails for any report, the Aggregation Server chooses a new candidate report share set and
-reruns the aggregation process. Otherwise, the Aggregation Server then outputs `msg` and each of
-the `aux` values for the corresponding reports.
-
-[[OPEN ISSUE: what happens if the msg is different for any two reports in the set? This should not happen if using a KCAEAD, but good to handle nevertheless]]
+reruns the aggregation process. Otherwise, the Aggregation Server then outputs the `msg` and `aux`
+values for the corresponding reports.
 
 ## Auxiliary data
 
@@ -746,12 +857,27 @@ If configured otherwise, clients can upload reports to the Aggregation Server us
 anonymizing proxy service such as {{Tor}}. However, use of OHTTP is likely to be the most efficient
 way to achieve oblivious submission.
 
-## Malicious Clients
+## Malicious Clients {#bad-reports}
 
-Malicious clients can perform a Sybil attack on the system by sending bogus reports to the Aggregation
-Server. A bogus report is one that will cause secret share recovery to fail. Aggregation Servers can
-limit the impact of such clients by using higher-layer defences such as identity-based
-certification {{Sybil}}.
+Malicious clients can perform a denial-of-service attacks on the system by sending bogus reports to
+the Aggregation Server. There are several types of bogus reports:
+
+- Reports with invalid shares, or corrupt reports. These are reports that will yield the incorrect
+  secret when combined by the Aggregation Server.
+- Reports with invalid ciphertext, or garbage reports. These are reports that contain an encryption
+  of the wrong measurement value (`msg`).
+
+Corrupt reports can be mitigated by using a verifiable secret sharing scheme, such as the one described
+in {{dep-vss}}, and verifying that the share commitments are correct for each share. This ensures that
+each share in a report set corresponds to the same secret.
+
+Garbage reports cannot easily be mitigated unless the Aggregation Server has a way to confirm that the
+recovered secret is correct for a given measurement value (`msg`). This might be done by allowing the
+Aggregation Server to query the Randomness Server on values of its choosing, but this opens the door to
+dictionary attacks.
+
+In the absence of protocol-level mitigations, Aggregation Servers can limit the impact of malicious
+clients by using higher-layer defences such as identity-based certification {{Sybil}}.
 
 ## Malicious Aggregation Server
 
