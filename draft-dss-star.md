@@ -26,6 +26,11 @@ author:
     organization: Brave Software
     email: "pes@brave.com"
 
+ -
+    name: "Christopher A. Wood"
+    organization: Cloudflare
+    email: caw@heapingbits.net
+
 normative:
 
   GCM: DOI.10.6028/NIST.SP.800-38D
@@ -1222,4 +1227,4 @@ Change controller:
 # Acknowledgments
 {:numbered="false"}
 
-The authors would like to thank the authors of the original {{STAR}} paper, which forms the basis for this document, as well as the following contributors: Christopher A. Wood.
+The authors would like to thank the authors of the original {{STAR}} paper, which forms the basis for this document.
