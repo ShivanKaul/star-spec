@@ -64,15 +64,6 @@ informative:
     title: Brave Browser
     target: https://brave.com
 
-  ADSS:
-    title: "Reimagining Secret Sharing: Creating a Safer and More Versatile Primitive by Adding Authenticity, Correcting Errors, and Reducing Randomness Requirements"
-    date: 2020-06-27
-    target: "https://eprint.iacr.org/2020/800"
-    author:
-      - ins: M. Bellare
-      - ins: W. Dai
-      - ins: P. Rogaway
-
   Shamir:
     title: "How to share a secret"
     date: 1979-11-01
@@ -203,7 +194,7 @@ A threshold secret sharing scheme with the following important properties:
 A threshold secret sharing scheme with these properties has the following API syntax:
 
 - Share(k, secret, rand): Produce a `k`-threshold share using randomness `rand` and `secret`,
-  along with a commitment to the secret, each of size `Nshare` and `Ncommitment` bytes long.
+  along with a commitment to the secret, of size `Nshare` and `Ncommitment` bytes long respectively.
   The value `k` is an integer, and `secret`  and `rand` are byte strings.
 - Recover(k, share_set): Combine the secret shares in `share_set`, each of which correspond
   to the same secret share commitment, which is of size at least `k`, and recover the corresponding
@@ -244,7 +235,7 @@ We now detail a number of member functions that can be invoked on `G`.
   the group. This function can raise an error if deserialization fails
   or `A` is the identity element of the group.
 - ScalarBaseMult(k): Output the scalar multiplication between Scalar `k` and the group generator `B`.
-- SerializeScalar(s): Maps a Scalar `s` to a canonical byte array `buf` of fixed length `Ns`.
+- SerializeScalar(s): Maps a Scalar `s` to a canonical byte array `buf` of fixed length `Nscalar`.
 - DeserializeScalar(buf): Attempts to map a byte array `buf` to a `Scalar` `s`.
   This function can raise an error if deserialization fails.
 
@@ -284,8 +275,8 @@ def Recover(k, share_set):
 
   points = []
   for share in share_set:
-    x = G.DeserializeScalar(share[0:Ns])
-    y = G.DeserializeScalar(share[Ns:])
+    x = G.DeserializeScalar(share[0:Nshare])
+    y = G.DeserializeScalar(share[Nshare:])
     points.append((x, y))
 
   poly = polynomial_interpolation(points)
@@ -319,7 +310,7 @@ def Share(k, secret, rand):
     poly.extend(G.HashToScalar(rand, str(i)))
 
   # Compute the secret (and polynomial) commitment
-  commitment = Commit(secret)
+  commitment = Commit(poly)
 
   # Evaluate the polynomial at a random point
   x = G.RandomScalar()
@@ -338,8 +329,8 @@ def Recover(k, share_set):
 
   points = []
   for share in share_set:
-    x = G.DeserializeScalar(share[0:Ns])
-    y = G.DeserializeScalar(share[Ns:])
+    x = G.DeserializeScalar(share[0:Nshare])
+    y = G.DeserializeScalar(share[Nshare:])
     points.append((x, y))
 
   poly = polynomial_interpolation(points)
@@ -364,8 +355,8 @@ as follows.
 
 ~~~~~
 def Verify(share, commitment):
-  x = G.DeserializeScalar(share[0:Ns])
-  y = G.DeserializeScalar(share[Ns:])
+  x = G.DeserializeScalar(share[0:Nshare])
+  y = G.DeserializeScalar(share[Nshare:])
   S' = G.ScalarBaseMult(y)
 
   if len(commitment) % Ne != 0:
@@ -413,11 +404,11 @@ Finally, this specification makes use of the following shared functions and para
   This function can raise a DeserializeError upon failure; see {{OPRF, Section 2.1}}
   for more details.
 - SerializeScalar(scalar): Map input `scalar` to a unique byte array buf of fixed
-  length Ns bytes.
+  length Nscalar bytes.
 - DeserializeScalar(buf): Attempt to map input byte array `buf` to an OPRF scalar element.
   This function raise a DeserializeError upon failure; see {{OPRF, Section 2.1}}
   for more details.
-- Ns: The size of a serialized OPRF scalar element output from SerializeScalar.
+- Nscalar: The size of a serialized OPRF scalar element output from SerializeScalar.
 - Noe: The size of a serialized OPRF group element output from SerializeElement.
 
 This specification uses the verifiable OPRF from {{OPRF, Section 3}} with the
@@ -444,11 +435,11 @@ for encrypting and authenticating plaintext with some additional data.
 It has the following API and parameters:
 
 - `Seal(key, nonce, aad, pt)`: Encrypt and authenticate plaintext
-  `"pt"` with associated data `"aad"` using symmetric key `"key"` and nonce
-  `"nonce"`, yielding ciphertext `"ct"` and tag `"tag"`.
-- `Open(key, nonce, aad, ct)`: Decrypt `"ct"` and tag `"tag"` using
-  associated data `"aad"` with symmetric key `"key"` and nonce `"nonce"`,
-  returning plaintext message `"pt"`. This function can raise an
+  `pt` with associated data `aad` using symmetric key `key` and nonce
+  `nonce`, yielding ciphertext `ct` and tag `tag`.
+- `Open(key, nonce, aad, ct, tag)`: Decrypt `ct` and tag `tag` using
+  associated data `aad` with symmetric key `key` and nonce `nonce`,
+  returning plaintext message `pt`. This function can raise an
   `OpenError` upon failure.
 - `Nk`: The length in bytes of a key for this algorithm.
 - `Nn`: The length in bytes of a nonce for this algorithm.
@@ -466,14 +457,13 @@ def Seal(key, nonce, aad, pt):
 
   ct = AES-128-GCM-Seal(key=aead_key, nonce=nonce, aad=aad, pt=pt)
   tag = HMAC(key=hmac_key, message=ct)
-  return ct || tag
+  return ct, tag
 
-def Open(key, nonce, aad, ct_and_tag):
+def Open(key, nonce, aad, ct, tag):
   key_prk = Extract(nil, key)
   aead_key = Expand(key_prk, "aead", Nk)
   hmac_key = Expand(key_prk, "hmac", 32) // 32 bytes for SHA-256
 
-  ct || tag = ct_and_tag
   expected_tag = HMAC(key=hmac_key, message=ct)
   if !constant_time_equal(expected_tag, tag):
     raise OpenError
@@ -571,7 +561,7 @@ seed = random(32)
 
 ### Randomness Protocol
 
-This procedure works as follows. Let `msg` be the client's measurement to be used for deriving
+This procedure works as follows. Let `secret` be the client's measurement to be used for deriving
 the randomness `rand`.
 
 Clients first generate the a context for invoking the OPRF protocol as follows:
@@ -583,7 +573,7 @@ client_context = SetupVOPRFClient(0x0001, pkR) // OPRF(ristretto255, SHA-512) ci
 Clients then blind their measurement using this context as follows:
 
 ~~~
-(blinded, blinded_element) = client_context.Blind(msg)
+(blinded, blinded_element) = client_context.Blind(secret)
 ~~~
 
 Clients then compute `randomness_request = OPRF.SerializeElement(blinded_element)` and send it
@@ -645,19 +635,19 @@ and proof as follows:
 ~~~
 evaluated_element_enc || proof_enc = parse(randomness_response)
 evaluated_element = OPRF.DeserializeElement(evaluated_element_enc)
-proof = [OPRF.DeserializeScalar(proof_enc[0:Ns]), OPRF.DeserializeScalar(proof_enc[Ns:])]
+proof = [OPRF.DeserializeScalar(proof_enc[0:Nshare]), OPRF.DeserializeScalar(proof_enc[Nshare:])]
 ~~~
 
 If any of these steps fail, the client aborts the protocol. Otherwise, the client
 finalizes the OPRF protocol to compute the output `rand` as follows:
 
 ~~~
-rand = client_context.Finalize(msg, blind, evaluated_element, proof)
+rand = client_context.Finalize(secret, blind, evaluated_element, proof)
 ~~~
 
 ## Reporting Phase {#report-phase}
 
-In the reporting phase, the client uses its measurement `msg` with auxiliary data `aux`
+In the reporting phase, the client uses its measurement `secret` with auxiliary data `aux`
 and its derived randomness `rand` to produce a report for the Aggregation Server.
 
 ### Reporting Configuration
@@ -693,10 +683,10 @@ The client then generates a secret share of `key_seed` using `share_coins` as ra
 random_share, share_commitment = Share(REPORT_THRESHOLD, key_seed, share_coins)
 ~~~
 
-The client then encrypts `msg` and `aux` using the KCAEAD key and nonce as follows:
+The client then encrypts `secret` and `aux` using the KCAEAD key and nonce as follows:
 
 ~~~
-report_data = len(msg, 4) || msg || len(aux, 4) || aux
+report_data = len(secret, 4) || secret || len(aux, 4) || aux
 encrypted_report = Seal(key, nonce, nil, report_data)
 ~~~
 
@@ -731,7 +721,7 @@ content-length = <Length of body>
 This message is sent to the Aggregation Server through the Anonymizing Proxy. See {{proxy-options}}
 for different types of proxy options.
 
-## Aggregation Phase
+## Aggregation Phase {#aggregation-phase}
 
 Aggregation is the final phase of STAR. It happens offline and does not require any
 communication between different STAR entities. It proceeds as follows. First, the
@@ -766,10 +756,10 @@ Each report ciphertext is decrypted as follows:
 report_data = Open(key, nonce, nil, ct)
 ~~~
 
-The message `msg` and auxiliary data `aux` are then parsed from `report_data`.
+The message `secret` and auxiliary data `aux` are then parsed from `report_data`.
 
 If this fails for any report, the Aggregation Server chooses a new candidate report share set and
-reruns the aggregation process. Otherwise, the Aggregation Server then outputs the `msg` and `aux`
+reruns the aggregation process. Otherwise, the Aggregation Server then outputs the `secret` and `aux`
 values for the corresponding reports.
 
 ## Auxiliary data
@@ -868,14 +858,12 @@ the Aggregation Server. There are several types of bogus reports:
 - Reports with invalid shares, or corrupt reports. These are reports that will yield the incorrect
   secret when combined by the Aggregation Server.
 - Reports with invalid ciphertext, or garbage reports. These are reports that contain an encryption
-  of the wrong measurement value (`msg`).
+  of the wrong measurement value (`secret`).
 
-Corrupt reports can be mitigated by using a verifiable secret sharing scheme, such as the one described
-in {{dep-vss}}, and verifying that the share commitments are correct for each share. This ensures that
-each share in a report set corresponds to the same secret.
+Given that the Aggregation Server creates a report set by grouping reports together by commitment, it is possible for a client to mount a Denial-of-Service (DoS) attack against a server in the Aggregation phase ({{aggregation-phase}}) by submitting an incorrect share for a particular commitment, which will cause the recovery process for that report set to fail. To prevent this attack, a verifiable secret sharing scheme, such as the one described in {{dep-vss}}, can be used to verify that the share commitments are correct for each share. This ensures that each share in a report set corresponds to the same secret.
 
 Garbage reports cannot easily be mitigated unless the Aggregation Server has a way to confirm that the
-recovered secret is correct for a given measurement value (`msg`). This might be done by allowing the
+recovered secret is correct for a given measurement value (`secret`). This might be done by allowing the
 Aggregation Server to query the Randomness Server on values of its choosing, but this opens the door to
 dictionary attacks.
 
