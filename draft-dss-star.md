@@ -310,7 +310,7 @@ def Share(k, secret, rand):
     poly.extend(G.HashToScalar(rand, str(i)))
 
   # Compute the secret (and polynomial) commitment
-  commitment = Commit(secret)
+  commitment = Commit(poly)
 
   # Evaluate the polynomial at a random point
   x = G.RandomScalar()
