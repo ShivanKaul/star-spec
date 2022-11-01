@@ -64,15 +64,6 @@ informative:
     title: Brave Browser
     target: https://brave.com
 
-  ADSS:
-    title: "Reimagining Secret Sharing: Creating a Safer and More Versatile Primitive by Adding Authenticity, Correcting Errors, and Reducing Randomness Requirements"
-    date: 2020-06-27
-    target: "https://eprint.iacr.org/2020/800"
-    author:
-      - ins: M. Bellare
-      - ins: W. Dai
-      - ins: P. Rogaway
-
   Shamir:
     title: "How to share a secret"
     date: 1979-11-01
@@ -730,7 +721,7 @@ content-length = <Length of body>
 This message is sent to the Aggregation Server through the Anonymizing Proxy. See {{proxy-options}}
 for different types of proxy options.
 
-## Aggregation Phase
+## Aggregation Phase {#aggregation-phase}
 
 Aggregation is the final phase of STAR. It happens offline and does not require any
 communication between different STAR entities. It proceeds as follows. First, the
@@ -869,9 +860,7 @@ the Aggregation Server. There are several types of bogus reports:
 - Reports with invalid ciphertext, or garbage reports. These are reports that contain an encryption
   of the wrong measurement value (`secret`).
 
-Corrupt reports can be mitigated by using a verifiable secret sharing scheme, such as the one described
-in {{dep-vss}}, and verifying that the share commitments are correct for each share. This ensures that
-each share in a report set corresponds to the same secret.
+Given that the Aggregation Server creates a report set by grouping reports together by commitment, it is possible for a client to mount a Denial-of-Service (DoS) attack against a server in the Aggregation phase ({{aggregation-phase}}) by submitting an incorrect share for a particular commitment, which will cause the recovery process for that report set to fail. To prevent this attack, a verifiable secret sharing scheme, such as the one described in {{dep-vss}}, can be used to verify that the share commitments are correct for each share. This ensures that each share in a report set corresponds to the same secret.
 
 Garbage reports cannot easily be mitigated unless the Aggregation Server has a way to confirm that the
 recovered secret is correct for a given measurement value (`secret`). This might be done by allowing the
