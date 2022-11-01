@@ -203,7 +203,7 @@ A threshold secret sharing scheme with the following important properties:
 A threshold secret sharing scheme with these properties has the following API syntax:
 
 - Share(k, secret, rand): Produce a `k`-threshold share using randomness `rand` and `secret`,
-  along with a commitment to the secret, each of size `Nshare` and `Ncommitment` bytes long.
+  along with a commitment to the secret, of size `Nshare` and `Ncommitment` bytes long respectively.
   The value `k` is an integer, and `secret`  and `rand` are byte strings.
 - Recover(k, share_set): Combine the secret shares in `share_set`, each of which correspond
   to the same secret share commitment, which is of size at least `k`, and recover the corresponding
@@ -244,7 +244,7 @@ We now detail a number of member functions that can be invoked on `G`.
   the group. This function can raise an error if deserialization fails
   or `A` is the identity element of the group.
 - ScalarBaseMult(k): Output the scalar multiplication between Scalar `k` and the group generator `B`.
-- SerializeScalar(s): Maps a Scalar `s` to a canonical byte array `buf` of fixed length `Ns`.
+- SerializeScalar(s): Maps a Scalar `s` to a canonical byte array `buf` of fixed length `Nscalar`.
 - DeserializeScalar(buf): Attempts to map a byte array `buf` to a `Scalar` `s`.
   This function can raise an error if deserialization fails.
 
@@ -284,8 +284,8 @@ def Recover(k, share_set):
 
   points = []
   for share in share_set:
-    x = G.DeserializeScalar(share[0:Ns])
-    y = G.DeserializeScalar(share[Ns:])
+    x = G.DeserializeScalar(share[0:Nshare])
+    y = G.DeserializeScalar(share[Nshare:])
     points.append((x, y))
 
   poly = polynomial_interpolation(points)
@@ -338,8 +338,8 @@ def Recover(k, share_set):
 
   points = []
   for share in share_set:
-    x = G.DeserializeScalar(share[0:Ns])
-    y = G.DeserializeScalar(share[Ns:])
+    x = G.DeserializeScalar(share[0:Nshare])
+    y = G.DeserializeScalar(share[Nshare:])
     points.append((x, y))
 
   poly = polynomial_interpolation(points)
@@ -364,8 +364,8 @@ as follows.
 
 ~~~~~
 def Verify(share, commitment):
-  x = G.DeserializeScalar(share[0:Ns])
-  y = G.DeserializeScalar(share[Ns:])
+  x = G.DeserializeScalar(share[0:Nshare])
+  y = G.DeserializeScalar(share[Nshare:])
   S' = G.ScalarBaseMult(y)
 
   if len(commitment) % Ne != 0:
@@ -413,11 +413,11 @@ Finally, this specification makes use of the following shared functions and para
   This function can raise a DeserializeError upon failure; see {{OPRF, Section 2.1}}
   for more details.
 - SerializeScalar(scalar): Map input `scalar` to a unique byte array buf of fixed
-  length Ns bytes.
+  length Nscalar bytes.
 - DeserializeScalar(buf): Attempt to map input byte array `buf` to an OPRF scalar element.
   This function raise a DeserializeError upon failure; see {{OPRF, Section 2.1}}
   for more details.
-- Ns: The size of a serialized OPRF scalar element output from SerializeScalar.
+- Nscalar: The size of a serialized OPRF scalar element output from SerializeScalar.
 - Noe: The size of a serialized OPRF group element output from SerializeElement.
 
 This specification uses the verifiable OPRF from {{OPRF, Section 3}} with the
@@ -645,7 +645,7 @@ and proof as follows:
 ~~~
 evaluated_element_enc || proof_enc = parse(randomness_response)
 evaluated_element = OPRF.DeserializeElement(evaluated_element_enc)
-proof = [OPRF.DeserializeScalar(proof_enc[0:Ns]), OPRF.DeserializeScalar(proof_enc[Ns:])]
+proof = [OPRF.DeserializeScalar(proof_enc[0:Nshare]), OPRF.DeserializeScalar(proof_enc[Nshare:])]
 ~~~
 
 If any of these steps fail, the client aborts the protocol. Otherwise, the client
