@@ -444,11 +444,11 @@ for encrypting and authenticating plaintext with some additional data.
 It has the following API and parameters:
 
 - `Seal(key, nonce, aad, pt)`: Encrypt and authenticate plaintext
-  `"pt"` with associated data `"aad"` using symmetric key `"key"` and nonce
-  `"nonce"`, yielding ciphertext `"ct"` and tag `"tag"`.
-- `Open(key, nonce, aad, ct)`: Decrypt `"ct"` and tag `"tag"` using
-  associated data `"aad"` with symmetric key `"key"` and nonce `"nonce"`,
-  returning plaintext message `"pt"`. This function can raise an
+  `pt` with associated data `aad` using symmetric key `key` and nonce
+  `nonce`, yielding ciphertext `ct` and tag `tag`.
+- `Open(key, nonce, aad, ct, tag)`: Decrypt `ct` and tag `tag` using
+  associated data `aad` with symmetric key `key` and nonce `nonce`,
+  returning plaintext message `pt`. This function can raise an
   `OpenError` upon failure.
 - `Nk`: The length in bytes of a key for this algorithm.
 - `Nn`: The length in bytes of a nonce for this algorithm.
@@ -466,14 +466,13 @@ def Seal(key, nonce, aad, pt):
 
   ct = AES-128-GCM-Seal(key=aead_key, nonce=nonce, aad=aad, pt=pt)
   tag = HMAC(key=hmac_key, message=ct)
-  return ct || tag
+  return ct, tag
 
-def Open(key, nonce, aad, ct_and_tag):
+def Open(key, nonce, aad, ct, tag):
   key_prk = Extract(nil, key)
   aead_key = Expand(key_prk, "aead", Nk)
   hmac_key = Expand(key_prk, "hmac", 32) // 32 bytes for SHA-256
 
-  ct || tag = ct_and_tag
   expected_tag = HMAC(key=hmac_key, message=ct)
   if !constant_time_equal(expected_tag, tag):
     raise OpenError
