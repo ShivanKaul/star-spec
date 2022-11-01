@@ -571,7 +571,7 @@ seed = random(32)
 
 ### Randomness Protocol
 
-This procedure works as follows. Let `msg` be the client's measurement to be used for deriving
+This procedure works as follows. Let `secret` be the client's measurement to be used for deriving
 the randomness `rand`.
 
 Clients first generate the a context for invoking the OPRF protocol as follows:
@@ -583,7 +583,7 @@ client_context = SetupVOPRFClient(0x0001, pkR) // OPRF(ristretto255, SHA-512) ci
 Clients then blind their measurement using this context as follows:
 
 ~~~
-(blinded, blinded_element) = client_context.Blind(msg)
+(blinded, blinded_element) = client_context.Blind(secret)
 ~~~
 
 Clients then compute `randomness_request = OPRF.SerializeElement(blinded_element)` and send it
@@ -652,12 +652,12 @@ If any of these steps fail, the client aborts the protocol. Otherwise, the clien
 finalizes the OPRF protocol to compute the output `rand` as follows:
 
 ~~~
-rand = client_context.Finalize(msg, blind, evaluated_element, proof)
+rand = client_context.Finalize(secret, blind, evaluated_element, proof)
 ~~~
 
 ## Reporting Phase {#report-phase}
 
-In the reporting phase, the client uses its measurement `msg` with auxiliary data `aux`
+In the reporting phase, the client uses its measurement `secret` with auxiliary data `aux`
 and its derived randomness `rand` to produce a report for the Aggregation Server.
 
 ### Reporting Configuration
@@ -693,10 +693,10 @@ The client then generates a secret share of `key_seed` using `share_coins` as ra
 random_share, share_commitment = Share(REPORT_THRESHOLD, key_seed, share_coins)
 ~~~
 
-The client then encrypts `msg` and `aux` using the KCAEAD key and nonce as follows:
+The client then encrypts `secret` and `aux` using the KCAEAD key and nonce as follows:
 
 ~~~
-report_data = len(msg, 4) || msg || len(aux, 4) || aux
+report_data = len(secret, 4) || secret || len(aux, 4) || aux
 encrypted_report = Seal(key, nonce, nil, report_data)
 ~~~
 
@@ -766,10 +766,10 @@ Each report ciphertext is decrypted as follows:
 report_data = Open(key, nonce, nil, ct)
 ~~~
 
-The message `msg` and auxiliary data `aux` are then parsed from `report_data`.
+The message `secret` and auxiliary data `aux` are then parsed from `report_data`.
 
 If this fails for any report, the Aggregation Server chooses a new candidate report share set and
-reruns the aggregation process. Otherwise, the Aggregation Server then outputs the `msg` and `aux`
+reruns the aggregation process. Otherwise, the Aggregation Server then outputs the `secret` and `aux`
 values for the corresponding reports.
 
 ## Auxiliary data
@@ -868,14 +868,14 @@ the Aggregation Server. There are several types of bogus reports:
 - Reports with invalid shares, or corrupt reports. These are reports that will yield the incorrect
   secret when combined by the Aggregation Server.
 - Reports with invalid ciphertext, or garbage reports. These are reports that contain an encryption
-  of the wrong measurement value (`msg`).
+  of the wrong measurement value (`secret`).
 
 Corrupt reports can be mitigated by using a verifiable secret sharing scheme, such as the one described
 in {{dep-vss}}, and verifying that the share commitments are correct for each share. This ensures that
 each share in a report set corresponds to the same secret.
 
 Garbage reports cannot easily be mitigated unless the Aggregation Server has a way to confirm that the
-recovered secret is correct for a given measurement value (`msg`). This might be done by allowing the
+recovered secret is correct for a given measurement value (`secret`). This might be done by allowing the
 Aggregation Server to query the Randomness Server on values of its choosing, but this opens the door to
 dictionary attacks.
 
