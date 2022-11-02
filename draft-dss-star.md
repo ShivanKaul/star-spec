@@ -361,7 +361,7 @@ def Verify(share, commitment):
 
   if len(commitment) % Ne != 0:
     raise Exception("Invalid commitment length")
-  num_coefficients = len(commitment) % Ne
+  num_coefficients = len(commitment) / Ne
   commitments = []
   for i in range(0, num_coefficients):
     c_i = G.DeserializeElement(commitment[i*Ne:(i+1)*Ne])
