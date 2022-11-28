@@ -184,194 +184,27 @@ This section describes the syntax for these protocols and primitives in more det
 
 ## Threshold Secret Sharing {#deps-tss}
 
-A threshold secret sharing scheme with the following important properties:
+Threshold secret sharing allows the owner of a secret
+to split it into independent shares, each of which reveals nothing about
+the secret on its own. However, the threshold number of shares for a secret
+can be efficiently recombined by an aggregator to recover a shared secret.
 
-- Privacy: Secret shares reveal nothing unless k = REPORT_THRESHOLD shares are combined
-  to recover the secret.
-- Authenticity: Combining at least k = REPORT_THRESHOLD shares will only succeed if all
-  shares correspond to the same underlying secret. Otherwise, it fails.
+A secret sharing scheme has the following simple syntax.
 
-A threshold secret sharing scheme with these properties has the following API syntax:
+- RandomShare(k, secret, rand): Produce a random `k`-threshold share of `secret` using randomness `rand`,
+  as well as an encoding of the shared secret. The share is a `Nshare`-byte string, and the shared
+  secret is a `Nsecret`-byte string. The value `k` is an integer, and `secret`  and `rand` are byte strings.
+- Recover(k, share_set): Combine the secret shares in `share_set`, which is of size at least
+  `k`, and recover the shared secret output from the corresponding RandomShare or Share function.
+  If recovery fails, this function returns an error.
+- Verify(share): Output 1 if `share` is valid and 0 otherwise, where `share` is a byte string
+  output from Share or RandomShare.
+- ShareParts(share): Outputs two byte-strings, one corresponding to the encoded share and another
+  corresponding to the encoded share `commitment`.
 
-- Share(k, secret, rand): Produce a `k`-threshold share using randomness `rand` and `secret`,
-  along with a commitment to the secret, of size `Nshare` and `Ncommitment` bytes long respectively.
-  The value `k` is an integer, and `secret`  and `rand` are byte strings.
-- Recover(k, share_set): Combine the secret shares in `share_set`, each of which correspond
-  to the same secret share commitment, which is of size at least `k`, and recover the corresponding
-  message `secret`. If recovery fails, this function returns an error.
-- Nshare: The size in bytes of a secret share value.
-- Ncommitment: The size in bytes of a secret share commitment value.
-
-A threshold secret sharing scheme is built on top of the scalar field of a prime-order group `G`, where
-the order is a large prime `p`. The group operation for `G` is addition `+` with identity element `I`.
-For any elements `A` and `B` of the group `G`, `A + B = B + A` is also a member of `G`. Also, for any
-`A` in `G`, there exists an element `-A` such that `A + (-A) = (-A) + A = I`. Integers, taken modulo the group order `p`, are called
-scalars; arithmetic operations on scalars are implicitly performed modulo `p`. Since `p` is prime,
-scalars form a finite field. Scalar multiplication is equivalent to the repeated
-application of the group operation on an element `A` with itself `r-1` times, denoted as
-`ScalarMult(A, r)`. We denote the sum, difference, and product of two scalars using the `+`, `-`,
-and `*` operators, respectively. (Note that this means `+` may refer to group element addition or
-scalar addition, depending on types of the operands.) For any element `A`, `ScalarMult(A, p) = I`.
-We denote `B` as a fixed generator of the group. Scalar base multiplication is equivalent to the repeated application
-of the group operation `B` with itself `r-1` times, this is denoted as `ScalarBaseMult(r)`. The set of
-scalars corresponds to `GF(p)`, which we refer to as the scalar field. This document uses types
-`Element` and `Scalar` to denote elements of the group `G` and its set of scalars, respectively.
-We denote Scalar(x) as the conversion of integer input `x` to the corresponding Scalar value with
-the same numeric value. For example, Scalar(1) yields a Scalar representing the value 1.
-We denote equality comparison as `==` and assignment of values by `=`. Finally, it is assumed that
-group element addition, negation, and equality comparisons can be efficiently computed for
-arbitrary group elements.
-
-We now detail a number of member functions that can be invoked on `G`.
-
-- Identity(): Outputs the group identity element `I`.
-- RandomScalar(): Outputs a random `Scalar` element in GF(p), i.e., a random scalar in \[0, p - 1\].
-- HashToScalar(x, dst): Deterministically map an array of bytes `x` to a Scalar element.
-  This function is optionally parameterized by a domain separation tag dst.
-- SerializeElement(A): Maps an `Element` `A` to a canonical byte array `buf` of fixed length `Ne`. This
-  function can raise an error if `A` is the identity element of the group.
-- DeserializeElement(buf): Attempts to map a byte array `buf` to an `Element` `A`,
-  and fails if the input is not the valid canonical byte representation of an element of
-  the group. This function can raise an error if deserialization fails
-  or `A` is the identity element of the group.
-- ScalarBaseMult(k): Output the scalar multiplication between Scalar `k` and the group generator `B`.
-- SerializeScalar(s): Maps a Scalar `s` to a canonical byte array `buf` of fixed length `Nscalar`.
-- DeserializeScalar(buf): Attempts to map a byte array `buf` to a `Scalar` `s`.
-  This function can raise an error if deserialization fails.
-
-[[OPEN ISSUE: specify validation steps somewhere, likely cribbing from other documents]]
-
-### Unverifiable Secret Sharing
-
-This section specifies traditional (unverifiable) Shamir secret sharing (SSS) {{Shamir}}
-for implementing the sharing scheme. This functionality is implemented using
-ristretto255 {{!RISTRETTO=I-D.irtf-cfrg-ristretto255-decaf448}}.
-Share and Recover are implemented as follows, where Nshare = 2\*Nscalar and Ncommitment = 32.
-
-~~~~~
-def Share(k, secret, rand):
-  # Construct the secret sharing polynomial
-  poly = [G.HashToScalar(secret, str(0))]
-  for i in range(1, k):
-    poly.extend(G.HashToScalar(rand, str(i)))
-
-  # Compute the secret commitment
-  commitment = SHA256(secret)
-
-  # Evaluate the polynomial at a random point
-  x = G.RandomScalar()
-  y = polynomial_evaluate(x, poly)
-
-  # Construct the share
-  x_enc = G.SerializeScalar(x)
-  y_enc = G.SerializeScalar(y)
-  share = x_enc || y_enc
-
-  return share, commitment
-
-def Recover(k, share_set):
-  if share_set.length < k:
-    raise RecoveryFailedError
-
-  points = []
-  for share in share_set:
-    x = G.DeserializeScalar(share[0:Nshare])
-    y = G.DeserializeScalar(share[Nshare:])
-    points.append((x, y))
-
-  poly = polynomial_interpolation(points)
-  return poly[0]
-~~~~~
-
-The dependencies for Share and Recover are as follows:
-
-- `polynomial_evaluate(x, poly)` from
-  {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.1}} for evaluating a
-  given polynomial specified by `poly` on the input `x`.
-- `polynomial_interpolation(points)` from
-  {{!FROST=I-D.draft-irtf-cfrg-frost, Section 4.2.3}} for constructing a
-  polynomial of degree `N-1` from the set `points` of size `N` and returning
-  the coefficient list, where the 0-th coefficient of the polynomial is the
-  first element in the output list.
-
-### Verifiable Secret Sharing {#dep-vss}
-
-This section specifies Feldman's verifiable secret sharing (VSS) {{?Feldman=DOI.10.1109/SFCS.1987.4}}
-for implementing the sharing scheme. This functionality is implemented using
-ristretto255 {{!RISTRETTO=I-D.irtf-cfrg-ristretto255-decaf448}}.
-Share and Recover are implemented as follows, where Nshare = 2\*Nscalar and Ncommitment = k\*Ne,
-where Ne is the size of a serialized group element.
-
-~~~~~
-def Share(k, secret, rand):
-  # Construct the secret sharing polynomial
-  poly = [G.HashToScalar(secret, str(0))]
-  for i in range(1, k):
-    poly.extend(G.HashToScalar(rand, str(i)))
-
-  # Compute the secret (and polynomial) commitment
-  commitment = Commit(poly)
-
-  # Evaluate the polynomial at a random point
-  x = G.RandomScalar()
-  y = polynomial_evaluate(x, poly)
-
-  # Construct the share
-  x_enc = G.SerializeScalar(x)
-  y_enc = G.SerializeScalar(y)
-  share = x_enc || y_enc
-
-  return share, commitment
-
-def Recover(k, share_set):
-  if share_set.length < k:
-    raise RecoveryFailedError
-
-  points = []
-  for share in share_set:
-    x = G.DeserializeScalar(share[0:Nshare])
-    y = G.DeserializeScalar(share[Nshare:])
-    points.append((x, y))
-
-  poly = polynomial_interpolation(points)
-  return poly[0]
-~~~~~
-
-The helper functions `polynomial_evaluate` and `polynomial_interpolation` are as defined
-in the previous section. The helper function Commit is implemented as follows:
-
-~~~~~
-def Commit(poly):
-  commitment = nil
-  for coefficient in poly:
-    C_i = G.ScalarBaseMult(coefficient)
-    commitment = commitment || G.SerializeElement(C_i)
-  return commitment
-~~~~~
-
-Moreover, VSS extends the syntax of SSS to add another function, Verify, that is
-used to check that a share is correct for a given commitment. Verify is implemented
-as follows.
-
-~~~~~
-def Verify(share, commitment):
-  x = G.DeserializeScalar(share[0:Nshare])
-  y = G.DeserializeScalar(share[Nshare:])
-  S' = G.ScalarBaseMult(y)
-
-  if len(commitment) % Ne != 0:
-    raise Exception("Invalid commitment length")
-  num_coefficients = len(commitment) / Ne
-  commitments = []
-  for i in range(0, num_coefficients):
-    c_i = G.DeserializeElement(commitment[i*Ne:(i+1)*Ne])
-    commitments.extend(c_i)
-
-  S = G.Identity()
-  for j in range(0, num_coefficients):
-    S = S + G.ScalarMult(commitments[j], pow(x, j))
-  return S == S'
-~~~~~
+This specification uses the Authenticated Threshold Secret Sharing 
+with Deterministic Tags variant from [CITE], denoted DVTSS, over the
+Ristretto255 group.
 
 ## Verifiable Oblivious Pseudorandom Function {#deps-oprf}
 
@@ -635,7 +468,7 @@ and proof as follows:
 ~~~
 evaluated_element_enc || proof_enc = parse(randomness_response)
 evaluated_element = OPRF.DeserializeElement(evaluated_element_enc)
-proof = [OPRF.DeserializeScalar(proof_enc[0:Nshare]), OPRF.DeserializeScalar(proof_enc[Nshare:])]
+proof = [OPRF.DeserializeScalar(proof_enc[0:Nscalar]), OPRF.DeserializeScalar(proof_enc[Nscalar:])]
 ~~~
 
 If any of these steps fail, the client aborts the protocol. Otherwise, the client
@@ -670,17 +503,21 @@ This reporting protocol works as follows. First, the client stretches `rand` int
 rand_prk = Extract(nil, rand)
 key_seed = Expand(rand_prk, "key_seed", 16)
 share_coins = Expand(rand_prk, "share_coins", 16)
-
-// Symmetric encryption key derivation
-key_prk = Extract(nil, key_seed)
-key = Expand(key_prk, "key", Nk)
-nonce = Expand(key_prk, "nonce", Nn)
 ~~~
 
 The client then generates a secret share of `key_seed` using `share_coins` as randomness as follows:
 
 ~~~
-random_share, share_commitment = Share(REPORT_THRESHOLD, key_seed, share_coins)
+shared_secret, random_share = DVTSS.RandomShare(REPORT_THRESHOLD, key_seed, share_coins)
+~~~
+
+The client then derives key material from the shared secret:
+
+~~~
+// Symmetric encryption key derivation
+key_prk = Extract(nil, shared_secret)
+key = Expand(key_prk, "key", Nk)
+nonce = Expand(key_prk, "nonce", Nn)
 ~~~
 
 The client then encrypts `secret` and `aux` using the KCAEAD key and nonce as follows:
@@ -692,19 +529,21 @@ encrypted_report = Seal(key, nonce, nil, report_data)
 
 The function `len(x, n)` encodes the length of input `x` as an `n`-byte big-endian integer.
 
-Finally, the client constructs a report consisting of `encrypted_report` and `random_share`,
-as well as `share_commitment`, and sends this to the Anonymizing Server in the subsequent
-epoch, i.e., after the Randomness Server has rotated its OPRF key.
+Finally, the client constructs a report from `encrypted_report` and `random_share`.
+It does this by splitting `random_share` into its encoded share value and commitment,
+i.e., `share_value, share_commitment = DVTSS.ShareParts(random_share)`. It then constructs
+a report by length-prefix encoding `encrypted_report`, `share_value`, and `share_commitment`,
+as follows.
 
 ~~~
 struct {
   opaque encrypted_report<1..2^16-1>;
-  opaque random_share[Nshare];
-  opaque share_commitment[Ncommitment];
+  opaque share_value<1..2^16-1>;
+  opaque share_commitment<1..2^16-1>;
 } Report;
 ~~~
 
-Specifically, Clients send a Report to the Aggregation Server using an HTTP POST message
+Clients send this Report to the Aggregation Server using an HTTP POST message
 with content type "application/star-report". An example message is below.
 
 ~~~
@@ -719,7 +558,8 @@ content-length = <Length of body>
 ~~~
 
 This message is sent to the Aggregation Server through the Anonymizing Proxy. See {{proxy-options}}
-for different types of proxy options.
+for different types of proxy options. The client should send this Report to the Aggregation
+Server in the subsequent epoch, i.e., after the Randomness Server has rotated its OPRF key. 
 
 ## Aggregation Phase {#aggregation-phase}
 
@@ -727,25 +567,25 @@ Aggregation is the final phase of STAR. It happens offline and does not require 
 communication between different STAR entities. It proceeds as follows. First, the
 Aggregation Server groups reports together based on their `share_commitment` value.
 If applicable, the Aggregation Server also verifies that each share commitment is correct,
-i.e., by invoking the Verify function on each `share` and `share_commitment` pair in
-candidate set of reports. Let `report_set` denote a set of at least REPORT_THRESHOLD
-reports that have a matching `share_commitment` value.
+i.e., by invoking the DVTSS.Verify function on the concatation of each `share_value` and 
+`share_commitment` pair in a candidate set of reports. Let `report_set` denote a set of
+at least REPORT_THRESHOLD reports that have a matching `share_commitment` value.
 
 Given this set, the Aggregation Server begins by running the secret share recovery algoritm
 as follows:
 
 ~~~
-key_seed = Recover(report_set)
+shared_secret = DVTSS.Recover(report_set)
 ~~~
 
 If this fails, the Aggregation Server chooses a new candidate report share set and
 reruns the aggregation process. See {{bad-reports}} for more details.
 
-Otherwise, the Aggregation Server derives the same KCAEAD key and nonce from `key_seed` to
+Otherwise, the Aggregation Server derives the same KCAEAD key and nonce from `shared_secret` to
 decrypt each of the report ciphertexts in `report_set`.
 
 ~~~
-key_prk = Extract(nil, key_seed)
+key_prk = Extract(nil, shared_secret)
 key = Expand(key_prk, "key", Nk)
 nonce = Expand(key_prk, "nonce", Nn)
 ~~~
