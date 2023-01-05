@@ -1,7 +1,7 @@
 ---
 title: "STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting"
 abbrev: "STAR"
-category: std
+category: exp
 stream: IETF
 
 docname: draft-dss-star-latest
