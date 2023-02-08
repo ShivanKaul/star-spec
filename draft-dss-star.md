@@ -881,6 +881,13 @@ they use, which reduces the window in which this attack can be launched ({{sec-r
 Note that such attacks can also be limited in scope by maintaining out-of-band protections
 against entities that attempt to launch large numbers of queries in short time periods.
 
+### Detecting Presence of Specific Measurements
+
+Related to {{dictionary-attacks}}, a malicious Aggregation Server could detect the presence of
+a specific measurement in the set of received encrypted reports by querying the Randomness Server 
+for that measurement. Similar to {{dictionary-attacks}}, this attack is also mitigated by regularly
+rotating the VOPRF key and out-of-band protections such as IP-based restrictions.
+
 ### Sybil Attacks
 
 By their very nature, attacks where a malicious Aggregation Server injects clients into the
