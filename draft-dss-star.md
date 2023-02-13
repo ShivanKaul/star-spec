@@ -875,18 +875,14 @@ clients by using higher-layer defences such as identity-based certification {{Sy
 ### Dictionary Attacks {#dictionary-attacks}
 
 The Aggregation Server may attempt to launch a dictionary attack against the client measurement,
-by repeatedly launching queries against the Randomness Server for measurements of its choice.
-This is mitigated by the fact that the Randomness Server regularly rotates the VOPRF key that
+by repeatedly launching queries against the Randomness Server for measurements of its choice. The
+Aggregation Server could also detect the presence of a specific measurement in the set of received
+encrypted reports by querying the Randomness Server for that measurement.
+
+This attack is mitigated by the fact that the Randomness Server regularly rotates the VOPRF key that
 they use, which reduces the window in which this attack can be launched ({{sec-randomness-sampling}}).
 Note that such attacks can also be limited in scope by maintaining out-of-band protections
 against entities that attempt to launch large numbers of queries in short time periods.
-
-### Detecting Presence of Specific Measurements
-
-Related to {{dictionary-attacks}}, a malicious Aggregation Server could detect the presence of
-a specific measurement in the set of received encrypted reports by querying the Randomness Server 
-for that measurement. Similar to {{dictionary-attacks}}, this attack is also mitigated by regularly
-rotating the VOPRF key and out-of-band protections such as IP-based restrictions.
 
 ### Sybil Attacks
 
