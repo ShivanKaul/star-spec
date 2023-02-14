@@ -198,7 +198,7 @@ A secret sharing scheme has the following simple syntax.
   `k`, and recover the shared secret output from the corresponding RandomShare or Share function.
   If recovery fails, this function returns an error.
 - Verify(share): Output 1 if `share` is valid and 0 otherwise, where `share` is a byte string
-  output from Share or RandomShare.
+  output from RandomShare.
 - ShareParts(share): Outputs two byte-strings, one corresponding to the encoded share and another
   corresponding to the encoded share `commitment`.
 
