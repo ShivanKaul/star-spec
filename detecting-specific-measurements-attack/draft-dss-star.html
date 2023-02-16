@@ -1,0 +1,2958 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting</title>
+<meta content="Alex Davidson" name="author">
+<meta content="Shivan Kaul Sahib" name="author">
+<meta content="Peter Snyder" name="author">
+<meta content="Christopher A. Wood" name="author">
+<meta content="
+       Servers often need to collect data from clients that can be privacy-sensitive if
+the server is able to associate the collected data with a particular user. In
+this document we describe STAR, an efficient and secure threshold aggregation
+protocol for collecting measurements from clients by an untrusted aggregation
+server, while maintaining K-anonymity guarantees. 
+    " name="description">
+<meta content="xml2rfc 3.16.0" name="generator">
+<meta content="draft-dss-star-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.16.0
+    Python 3.10.9
+    appdirs 1.4.4
+    ConfigArgParse 1.5.3
+    google-i18n-address 2.5.2
+    html5lib 1.1
+    intervaltree 3.1.0
+    Jinja2 3.1.2
+    lxml 4.9.2
+    MarkupSafe 2.1.1
+    pycountry 22.3.5
+    PyYAML 6.0
+    requests 2.28.1
+    setuptools 65.6.0
+    six 1.16.0
+    wcwidth 0.2.6
+-->
+<link href="draft-dss-star.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Cabin Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Cabin Condensed", sans-serif;
+  font-weight: 600;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1#title {
+  font-size: 32px;
+  line-height: 40px;
+  clear: both;
+}
+h1#title, h1#rfcnum {
+  margin: 1.5em 0 0.2em;
+}
+h1#rfcnum + h1#title {
+  margin: 0.2em 0;
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+}
+#abstract+p code, #abstract+p samp, #abstract+p tt {
+  font-size: 16px;
+  line-height: 0;
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+/* font-family isn't space-separated, but =~ will have to do */
+svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
+  font-family: var(--font-mono);
+}
+.alignCenter.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  border: none;
+  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+     support flexbox yet.
+  */
+  display: table;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+}
+:is(ol, ul) :is(ol, ul) {
+  margin-left: 1em;
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+.ulCompact li {
+  margin: 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+}
+ul.empty li, .ulEmpty li {
+  margin-top: 0.5em;
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  line-height: 100%;
+  margin: 0 0 0 2em;
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+}
+dl > dt {
+  float: left;
+  margin-right: 1em;
+  min-width: 8ch;
+}
+dl.dlNewline > dt {
+  float: none;
+}
+dl > dd {
+  margin-bottom: .8em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:first-child, .break:first-child + *) {
+  margin-top: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:last-child) {
+  margin-bottom: 0;
+}
+dl > dd > dl {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a, a[href].selfRef:hover {
+  text-decoration: none;
+}
+a[href] {
+  color: var(--link-color);
+}
+a[href].selfRef, .iref + a[href].internal {
+  color: var(--text-color);
+}
+a[href]:hover {
+  text-decoration: underline;
+}
+a[href].selfRef:hover {
+  background-color: var(--highlight-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
+  pre, svg {
+    display: inline-block;
+    overflow-x: auto;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+}
+table.right {
+  margin-left: auto;
+}
+table.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+table.left {
+  margin-right: auto;
+}
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+table caption {
+  margin: 0;
+  padding: 3px 0 3px 1em;
+}
+table p {
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+}
+a.pilcrow[href] { color: var(--pilcrow-weak); }
+a.pilcrow[href]:hover { text-decoration: none; }
+@media not print {
+  :hover > a.pilcrow {
+    opacity: 1;
+  }
+  a.pilcrow[href]:hover {
+    color: var(--pilcrow-strong);
+    background-color: transparent;
+  }
+}
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: 14.5px;
+}
+.role {
+  font-variant: all-small-caps;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+}
+#identifiers dt {
+  width: var(--identifier-width);
+  min-width: var(--identifier-width);
+  clear: left;
+  float: left;
+  text-align: right;
+}
+#identifiers dd {
+  margin: 0;
+  margin-left: calc(1em + var(--identifier-width)) !important;
+  min-width: 5em;
+}
+#identifiers .authors .author {
+  display: inline-block;
+  margin-right: 1.5em;
+}
+#identifiers .authors .org {
+  font-style: italic;
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: left;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+}
+#toc nav ul {
+  margin: 0 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+}
+#toc nav li {
+  line-height: 1.3em;
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+  text-indent: -1.2em;
+}
+#toc a.xref {
+  white-space: normal;
+}
+/* references */
+.references dt {
+  text-align: right;
+  font-weight: bold;
+  min-width: 7em;
+}
+.references dt:target::before {
+  content: "⇒";
+  width: 15px;
+  margin: 0 10px 0 -25px;
+}
+.references dd {
+  margin-left: 8em !important;
+  overflow: auto;
+}
+
+.refInstance {
+  margin-bottom: 1.25em;
+}
+
+.references .ascii {
+  margin-bottom: 0.25em;
+}
+
+/* index */
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  margin: 1em 0;
+}
+address.vcard .nameRole {
+  font-weight: 700;
+  margin-left: 0;
+}
+address.vcard .label {
+  margin: 0.5em 0;
+}
+address.vcard .type {
+  display: none;
+}
+.alternative-contact {
+  margin: 1.5em 0 1em;
+}
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses > section {
+    column-count: 2;
+    column-gap: 20px;
+  }
+  #authors-addresses > section > h2 {
+    column-span: all;
+  }
+  /* hack for break-inside: avoid-column */
+  #authors-addresses address {
+    display: inline-block;
+    break-inside: avoid-column;
+  }
+}
+
+.rfcEditorRemove p:first-of-type {
+  font-style: italic;
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+/* alternative layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+  }
+  #toc.active {
+      opacity: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 2px 0 2px 6px;
+    padding-right: 1em;
+    font-size: 18px;
+    line-height: 24px;
+    min-width: 190px;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+  }
+  #toc h2::before { /* css hamburger */
+    float: right;
+    position: relative;
+    width: 1em;
+    height: 1px;
+    left: -164px;
+    margin: 8px 0 0 0;
+    background: white none repeat scroll 0 0;
+    box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+    content: "";
+  }
+  #toc nav {
+    display: none;
+    background-color: var(--background-color);
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+  #toc.active nav {
+    display: block;
+  }
+  /* Make the collapsed ToC header render white on gray also when it's a link */
+  #toc h2 a,
+  #toc h2 a:link,
+  #toc h2 a:focus,
+  #toc h2 a:hover,
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+  #toc a.toplink {
+    margin-top: 2px;
+  }
+}
+
+/* alternative layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 2em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  #toc nav > ul  {
+    margin-bottom: 2em;
+  }
+  #toc ul {
+    margin: 0 0 0 4px;
+    font-size: var(--small-font-size);
+  }
+  #toc ul :is(p, li) {
+    margin: 2px 0;
+    line-height: 22px;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre {
+    page-break-inside: avoid;
+  }
+  figure {
+    overflow: scroll;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  h2+*, h3+*, h4+*, h5+*, h6+* {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Changes introduced to fix issues found during implementation */
+
+/* Separate body from document info even without intervening H1 */
+section {
+  clear: both;
+}
+
+/* Top align author divs, to avoid names without organization dropping level with org names */
+.author {
+  vertical-align: top;
+}
+
+/* Style section numbers with more space between number and title */
+.section-number {
+  padding-right: 0.5em;
+}
+
+/* Add styling for a link in the ToC that points to the top of the document */
+a.toplink {
+  float: right;
+  margin: 8px 0.5em 0;
+}
+
+/* Provide styling for table cell text alignment */
+table .text-left {
+  text-align: left;
+}
+table .text-center {
+  text-align: center;
+}
+table .text-right {
+  text-align: right;
+}
+
+/* Make the alternative author contact information look less like just another
+   author, and group it closer with the primary author contact information */
+.alternative-contact {
+  margin: 0.5em 0 0.25em 0;
+}
+address .non-ascii {
+  margin: 0 0 0 2em;
+}
+
+/* With it being possible to set tables with alignment
+  left, center, and right, { width: 100%; } does not make sense */
+table {
+  width: auto;
+}
+
+/* Avoid reference text that sits in a block with very wide left margin,
+   because of a long floating dt label.*/
+.references dd {
+  overflow: visible;
+}
+
+/* Control caption placement */
+caption {
+  caption-side: bottom;
+}
+
+/* Limit the width of the author address vcard, so names in right-to-left
+   script don't end up on the other side of the page. */
+
+address.vcard {
+  max-width: 20em;
+  margin-right: auto;
+}
+
+/* For address alignment dependent on LTR or RTL scripts */
+address div.left {
+  text-align: left;
+}
+address div.right {
+  text-align: right;
+}
+
+/* Give the table caption label the same styling as the figcaption */
+
+@media print {
+  .toplink {
+    display: none;
+  }
+
+  /* avoid overwriting the top border line with the ToC header */
+  #toc {
+    padding-top: 1px;
+  }
+
+  /* Avoid page breaks inside dl and author address entries */
+  dd {
+    page-break-before: avoid;
+  }
+  .vcard {
+    page-break-inside: avoid;
+  }
+
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
+  stroke: var(--text-color);
+}
+svg :is([stroke="white"], [stroke^="#fff"]) {
+  stroke: var(--background-color);
+}
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
+  fill: var(--text-color);
+}
+svg :is([fill="white"], [fill^="#fff"]) {
+  fill: var(--background-color);
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">STAR</td>
+<td class="right">February 2023</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Davidson, et al.</td>
+<td class="center">Expires 17 August 2023</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">Network Working Group</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-dss-star-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2023-02-13" class="published">13 February 2023</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Standards Track</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2023-08-17">17 August 2023</time></dd>
+<dt class="label-authors">Authors:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">A. Davidson</div>
+<div class="org">Brave Software</div>
+</div>
+<div class="author">
+      <div class="author-name">S. K. Sahib</div>
+<div class="org">Brave Software</div>
+</div>
+<div class="author">
+      <div class="author-name">P. Snyder</div>
+<div class="org">Brave Software</div>
+</div>
+<div class="author">
+      <div class="author-name">C. A. Wood</div>
+<div class="org">Cloudflare</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">Servers often need to collect data from clients that can be privacy-sensitive if
+the server is able to associate the collected data with a particular user. In
+this document we describe STAR, an efficient and secure threshold aggregation
+protocol for collecting measurements from clients by an untrusted aggregation
+server, while maintaining K-anonymity guarantees.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 17 August 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2023 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-cryptographic-dependencies" class="internal xref">Cryptographic Dependencies</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-threshold-secret-sharing" class="internal xref">Threshold Secret Sharing</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.1">
+                    <p id="section-toc.1-1.3.2.1.2.1.1" class="keepWithNext"><a href="#section-3.1.1" class="auto internal xref">3.1.1</a>.  <a href="#name-unverifiable-secret-sharing" class="internal xref">Unverifiable Secret Sharing</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.2">
+                    <p id="section-toc.1-1.3.2.1.2.2.1"><a href="#section-3.1.2" class="auto internal xref">3.1.2</a>.  <a href="#name-verifiable-secret-sharing" class="internal xref">Verifiable Secret Sharing</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-verifiable-oblivious-pseudo" class="internal xref">Verifiable Oblivious Pseudorandom Function</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-key-derivation-function" class="internal xref">Key Derivation Function</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4">
+                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="auto internal xref">3.4</a>.  <a href="#name-key-committing-authenticate" class="internal xref">Key-Committing Authenticated Encryption with Associated Data</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-system-overview" class="internal xref">System Overview</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-randomness-phase" class="internal xref">Randomness Phase</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.1">
+                    <p id="section-toc.1-1.4.2.1.2.1.1"><a href="#section-4.1.1" class="auto internal xref">4.1.1</a>.  <a href="#name-configuration" class="internal xref">Configuration</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.2">
+                    <p id="section-toc.1-1.4.2.1.2.2.1"><a href="#section-4.1.2" class="auto internal xref">4.1.2</a>.  <a href="#name-randomness-protocol" class="internal xref">Randomness Protocol</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-reporting-phase" class="internal xref">Reporting Phase</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.1">
+                    <p id="section-toc.1-1.4.2.2.2.1.1"><a href="#section-4.2.1" class="auto internal xref">4.2.1</a>.  <a href="#name-reporting-configuration" class="internal xref">Reporting Configuration</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.2">
+                    <p id="section-toc.1-1.4.2.2.2.2.1"><a href="#section-4.2.2" class="auto internal xref">4.2.2</a>.  <a href="#name-reporting-protocol" class="internal xref">Reporting Protocol</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-aggregation-phase" class="internal xref">Aggregation Phase</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
+                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-auxiliary-data" class="internal xref">Auxiliary data</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-anonymizing-proxy-options" class="internal xref">Anonymizing Proxy Options</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-application-layer-proxy" class="internal xref">Application-Layer Proxy</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-connection-layer-proxy" class="internal xref">Connection-Layer Proxy</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-randomness-sampling" class="internal xref">Randomness Sampling</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-oblivious-submission" class="internal xref">Oblivious Submission</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-malicious-clients" class="internal xref">Malicious Clients</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-malicious-aggregation-serve" class="internal xref">Malicious Aggregation Server</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4.2.1">
+                    <p id="section-toc.1-1.6.2.4.2.1.1"><a href="#section-6.4.1" class="auto internal xref">6.4.1</a>.  <a href="#name-dictionary-attacks" class="internal xref">Dictionary Attacks</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4.2.2">
+                    <p id="section-toc.1-1.6.2.4.2.2.1"><a href="#section-6.4.2" class="auto internal xref">6.4.2</a>.  <a href="#name-sybil-attacks" class="internal xref">Sybil Attacks</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5">
+                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-leakage-and-failure-model" class="internal xref">Leakage and Failure Model</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5.2.1">
+                    <p id="section-toc.1-1.6.2.5.2.1.1"><a href="#section-6.5.1" class="auto internal xref">6.5.1</a>.  <a href="#name-size-of-anonymity-set" class="internal xref">Size of Anonymity Set</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5.2.2">
+                    <p id="section-toc.1-1.6.2.5.2.2.1"><a href="#section-6.5.2" class="auto internal xref">6.5.2</a>.  <a href="#name-collusion-between-aggregati" class="internal xref">Collusion between Aggregation and Randomness Servers</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5.2.3">
+                    <p id="section-toc.1-1.6.2.5.2.3.1"><a href="#section-6.5.3" class="auto internal xref">6.5.3</a>.  <a href="#name-collusion-between-aggregatio" class="internal xref">Collusion between Aggregation Server and Anonymizing Proxy</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-comparisons-with-other-syst" class="internal xref">Comparisons with other Systems</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-private-heavy-hitter-discov" class="internal xref">Private Heavy-Hitter Discovery</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-general-aggregation" class="internal xref">General Aggregation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-protocol-leakage" class="internal xref">Protocol Leakage</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
+                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-support-for-auxiliary-data" class="internal xref">Support for auxiliary data</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-protocol-message-media-type" class="internal xref">Protocol Message Media Types</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1.2.1">
+                    <p id="section-toc.1-1.8.2.1.2.1.1"><a href="#section-8.1.1" class="auto internal xref">8.1.1</a>.  <a href="#name-application-star-randomness" class="internal xref">"application/star-randomness-request" media type</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1.2.2">
+                    <p id="section-toc.1-1.8.2.1.2.2.1"><a href="#section-8.1.2" class="auto internal xref">8.1.2</a>.  <a href="#name-application-star-report-med" class="internal xref">"application/star-report" media type</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1.2.3">
+                    <p id="section-toc.1-1.8.2.1.2.3.1"><a href="#section-8.1.3" class="auto internal xref">8.1.3</a>.  <a href="#name-application-star-randomness-" class="internal xref">"application/star-randomness-response" media type</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">Collecting user data is often fraught with privacy issues because without adequate
+protections it is trivial for the server to learn sensitive information about the
+client contributing data. Even when the client's identity is separated from the
+data (for example, if the client is using the <span>[<a href="#Tor" class="cite xref">Tor</a>]</span> network or
+<span>[<a href="#OHTTP" class="cite xref">OHTTP</a>]</span> to upload data), it's possible for the collected data
+to be unique enough that the user's identity is leaked. A common solution to this
+problem of the measurement being user-identifying is to make sure that the measurement
+is only revealed to the server if there are at least K clients that have contributed
+the same data, thus providing K-anonymity to participating clients. Such
+privacy-preserving systems are referred to as threshold aggregation systems.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">In this document we describe one such system, namely Distributed Secret Sharing for
+Private Threshold Aggregation Reporting (STAR) <span>[<a href="#STAR" class="cite xref">STAR</a>]</span>.<a href="#section-1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="conventions-and-definitions">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">The following notation is used throughout the document.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-2-3.1">
+          <code>len(l)</code>: Outputs the length of input list <code>l</code>, e.g., <code>len([1,2,3]) = 3)</code>.<a href="#section-2-3.1" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-2-3.2">
+          <code>range(a, b)</code>: Outputs a list of integers from <code>a</code> to <code>b-1</code> in ascending order, e.g., <code>range(1, 4) = [1,2,3]</code>.<a href="#section-2-3.2" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-2-3.3">
+          <code>pow(a, b)</code>: Outputs the integer result of <code>a</code> to the power of <code>b</code>, e.g., <code>pow(2, 3) = 8</code>.<a href="#section-2-3.3" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-2-3.4">|| denotes concatenation of byte strings, i.e., <code>x || y</code> denotes the byte string <code>x</code>, immediately followed by
+the byte string <code>y</code>, with no extra separator, yielding <code>xy</code>.<a href="#section-2-3.4" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-2-3.5">
+          <code>str(x)</code>: Outputs an ASCII string encoding of the integer input <code>x</code>, e.g., <code>str(1) = "1"</code>.<a href="#section-2-3.5" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-2-3.6">nil denotes an empty byte string.<a href="#section-2-3.6" class="pilcrow">¶</a>
+</li>
+      </ul>
+<p id="section-2-4">In addition, the following terms are used:<a href="#section-2-4" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2-5">
+        <dt id="section-2-5.1">Aggregation Server:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.2">
+          <p id="section-2-5.2.1">An entity that would like to learn aggregated data from users.<a href="#section-2-5.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.3">Randomness Server:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.4">
+          <p id="section-2-5.4.1">An entity that runs an oblivious pseudorandom function (<span>[<a href="#OPRF" class="cite xref">OPRF</a>]</span>)
+service that allows clients to receive pseudorandom function evaluations on their
+measurement and the server OPRF key, without the Randomness Server learning anything
+about their measurement. The clients use the output as randomness to produce the
+report that is then sent to the Aggregation Server.<a href="#section-2-5.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.5">Anonymizing Server:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.6">
+          <p id="section-2-5.6.1">An entity that clients use to decouple their identity (IP address) from their
+messages sent to the Aggregation Server.<a href="#section-2-5.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.7">Client:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.8">
+          <p id="section-2-5.8.1">The entity that provides user data to the system.<a href="#section-2-5.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.9">Measurement:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.10">
+          <p id="section-2-5.10.1">The unencrypted, potentially-sensitive data that the client is asked to report.<a href="#section-2-5.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.11">Report:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.12">
+          <p id="section-2-5.12.1">The encrypted measurement being sent by the client.<a href="#section-2-5.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.13">Auxiliary Data:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.14">
+          <p id="section-2-5.14.1">Arbitrary data that clients may send as part of their report, but which is only
+revealed when at least K encrypted measurements of the same value are received.<a href="#section-2-5.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.15">REPORT_THRESHOLD:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.16">
+          <p id="section-2-5.16.1">The minimum number of reports that an Aggregation Server needs before revealing
+client data. This value is chosen by the application.<a href="#section-2-5.16.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="cryptographic-dependencies">
+<section id="section-3">
+      <h2 id="name-cryptographic-dependencies">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-cryptographic-dependencies" class="section-name selfRef">Cryptographic Dependencies</a>
+      </h2>
+<p id="section-3-1">STAR depends on the following cryptographic protocols and primitives:<a href="#section-3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3-2.1">Threshold secret sharing (TSS); <a href="#deps-tss" class="auto internal xref">Section 3.1</a><a href="#section-3-2.1" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-3-2.2">Oblivious Pseudorandom Function (OPRF); <a href="#deps-oprf" class="auto internal xref">Section 3.2</a><a href="#section-3-2.2" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-3-2.3">Key Derivation Function (KDF); <a href="#deps-kdf" class="auto internal xref">Section 3.3</a><a href="#section-3-2.3" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-3-2.4">Key-Committing Authenticated Encryption with Associated Data (KCAEAD); <a href="#deps-aead" class="auto internal xref">Section 3.4</a><a href="#section-3-2.4" class="pilcrow">¶</a>
+</li>
+      </ul>
+<p id="section-3-3">This section describes the syntax for these protocols and primitives in more detail.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<div id="deps-tss">
+<section id="section-3.1">
+        <h3 id="name-threshold-secret-sharing">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-threshold-secret-sharing" class="section-name selfRef">Threshold Secret Sharing</a>
+        </h3>
+<p id="section-3.1-1">A threshold secret sharing scheme with the following important properties:<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.1-2.1">Privacy: Secret shares reveal nothing unless k = REPORT_THRESHOLD shares are combined
+to recover the secret.<a href="#section-3.1-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-2.2">Authenticity: Combining at least k = REPORT_THRESHOLD shares will only succeed if all
+shares correspond to the same underlying secret. Otherwise, it fails.<a href="#section-3.1-2.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.1-3">A threshold secret sharing scheme with these properties has the following API syntax:<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.1-4.1">Share(k, secret, rand): Produce a <code>k</code>-threshold share using randomness <code>rand</code> and <code>secret</code>,
+along with a commitment to the secret, of size <code>Nshare</code> and <code>Ncommitment</code> bytes long respectively.
+The value <code>k</code> is an integer, and <code>secret</code>  and <code>rand</code> are byte strings.<a href="#section-3.1-4.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-4.2">Recover(k, share_set): Combine the secret shares in <code>share_set</code>, each of which correspond
+to the same secret share commitment, which is of size at least <code>k</code>, and recover the corresponding
+message <code>secret</code>. If recovery fails, this function returns an error.<a href="#section-3.1-4.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-4.3">Nshare: The size in bytes of a secret share value.<a href="#section-3.1-4.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-4.4">Ncommitment: The size in bytes of a secret share commitment value.<a href="#section-3.1-4.4" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.1-5">A threshold secret sharing scheme is built on top of the scalar field of a prime-order group <code>G</code>, where
+the order is a large prime <code>p</code>. The group operation for <code>G</code> is addition <code>+</code> with identity element <code>I</code>.
+For any elements <code>A</code> and <code>B</code> of the group <code>G</code>, <code>A + B = B + A</code> is also a member of <code>G</code>. Also, for any
+<code>A</code> in <code>G</code>, there exists an element <code>-A</code> such that <code>A + (-A) = (-A) + A = I</code>. Integers, taken modulo the group order <code>p</code>, are called
+scalars; arithmetic operations on scalars are implicitly performed modulo <code>p</code>. Since <code>p</code> is prime,
+scalars form a finite field. Scalar multiplication is equivalent to the repeated
+application of the group operation on an element <code>A</code> with itself <code>r-1</code> times, denoted as
+<code>ScalarMult(A, r)</code>. We denote the sum, difference, and product of two scalars using the <code>+</code>, <code>-</code>,
+and <code>*</code> operators, respectively. (Note that this means <code>+</code> may refer to group element addition or
+scalar addition, depending on types of the operands.) For any element <code>A</code>, <code>ScalarMult(A, p) = I</code>.
+We denote <code>B</code> as a fixed generator of the group. Scalar base multiplication is equivalent to the repeated application
+of the group operation <code>B</code> with itself <code>r-1</code> times, this is denoted as <code>ScalarBaseMult(r)</code>. The set of
+scalars corresponds to <code>GF(p)</code>, which we refer to as the scalar field. This document uses types
+<code>Element</code> and <code>Scalar</code> to denote elements of the group <code>G</code> and its set of scalars, respectively.
+We denote Scalar(x) as the conversion of integer input <code>x</code> to the corresponding Scalar value with
+the same numeric value. For example, Scalar(1) yields a Scalar representing the value 1.
+We denote equality comparison as <code>==</code> and assignment of values by <code>=</code>. Finally, it is assumed that
+group element addition, negation, and equality comparisons can be efficiently computed for
+arbitrary group elements.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+<p id="section-3.1-6">We now detail a number of member functions that can be invoked on <code>G</code>.<a href="#section-3.1-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.1-7.1">Identity(): Outputs the group identity element <code>I</code>.<a href="#section-3.1-7.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-7.2">RandomScalar(): Outputs a random <code>Scalar</code> element in GF(p), i.e., a random scalar in [0, p - 1].<a href="#section-3.1-7.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-7.3">HashToScalar(x, dst): Deterministically map an array of bytes <code>x</code> to a Scalar element.
+This function is optionally parameterized by a domain separation tag dst.<a href="#section-3.1-7.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-7.4">SerializeElement(A): Maps an <code>Element</code> <code>A</code> to a canonical byte array <code>buf</code> of fixed length <code>Ne</code>. This
+function can raise an error if <code>A</code> is the identity element of the group.<a href="#section-3.1-7.4" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-7.5">DeserializeElement(buf): Attempts to map a byte array <code>buf</code> to an <code>Element</code> <code>A</code>,
+and fails if the input is not the valid canonical byte representation of an element of
+the group. This function can raise an error if deserialization fails
+or <code>A</code> is the identity element of the group.<a href="#section-3.1-7.5" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-7.6">ScalarBaseMult(k): Output the scalar multiplication between Scalar <code>k</code> and the group generator <code>B</code>.<a href="#section-3.1-7.6" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-7.7">SerializeScalar(s): Maps a Scalar <code>s</code> to a canonical byte array <code>buf</code> of fixed length <code>Nscalar</code>.<a href="#section-3.1-7.7" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.1-7.8">DeserializeScalar(buf): Attempts to map a byte array <code>buf</code> to a <code>Scalar</code> <code>s</code>.
+This function can raise an error if deserialization fails.<a href="#section-3.1-7.8" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.1-8">[[OPEN ISSUE: specify validation steps somewhere, likely cribbing from other documents]]<a href="#section-3.1-8" class="pilcrow">¶</a></p>
+<div id="unverifiable-secret-sharing">
+<section id="section-3.1.1">
+          <h4 id="name-unverifiable-secret-sharing">
+<a href="#section-3.1.1" class="section-number selfRef">3.1.1. </a><a href="#name-unverifiable-secret-sharing" class="section-name selfRef">Unverifiable Secret Sharing</a>
+          </h4>
+<p id="section-3.1.1-1">This section specifies traditional (unverifiable) Shamir secret sharing (SSS) <span>[<a href="#Shamir" class="cite xref">Shamir</a>]</span>
+for implementing the sharing scheme. This functionality is implemented using
+ristretto255 <span>[<a href="#RISTRETTO" class="cite xref">RISTRETTO</a>]</span>.
+Share and Recover are implemented as follows, where Nshare = 2*Nscalar and Ncommitment = 32.<a href="#section-3.1.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.1.1-2">
+<pre>
+def Share(k, secret, rand):
+  # Construct the secret sharing polynomial
+  poly = [G.HashToScalar(secret, str(0))]
+  for i in range(1, k):
+    poly.extend(G.HashToScalar(rand, str(i)))
+
+  # Compute the secret commitment
+  commitment = SHA256(secret)
+
+  # Evaluate the polynomial at a random point
+  x = G.RandomScalar()
+  y = polynomial_evaluate(x, poly)
+
+  # Construct the share
+  x_enc = G.SerializeScalar(x)
+  y_enc = G.SerializeScalar(y)
+  share = x_enc || y_enc
+
+  return share, commitment
+
+def Recover(k, share_set):
+  if share_set.length &lt; k:
+    raise RecoveryFailedError
+
+  points = []
+  for share in share_set:
+    x = G.DeserializeScalar(share[0:Nshare])
+    y = G.DeserializeScalar(share[Nshare:])
+    points.append((x, y))
+
+  poly = polynomial_interpolation(points)
+  return poly[0]
+</pre><a href="#section-3.1.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-3.1.1-3">The dependencies for Share and Recover are as follows:<a href="#section-3.1.1-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.1.1-4.1">
+              <code>polynomial_evaluate(x, poly)</code> from
+<span>[<a href="#FROST" class="cite xref">FROST</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-frost-12#section-4.2.1" class="relref">Section 4.2.1</a></span> for evaluating a
+given polynomial specified by <code>poly</code> on the input <code>x</code>.<a href="#section-3.1.1-4.1" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-3.1.1-4.2">
+              <code>polynomial_interpolation(points)</code> from
+<span>[<a href="#FROST" class="cite xref">FROST</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-frost-12#section-4.2.3" class="relref">Section 4.2.3</a></span> for constructing a
+polynomial of degree <code>N-1</code> from the set <code>points</code> of size <code>N</code> and returning
+the coefficient list, where the 0-th coefficient of the polynomial is the
+first element in the output list.<a href="#section-3.1.1-4.2" class="pilcrow">¶</a>
+</li>
+          </ul>
+</section>
+</div>
+<div id="dep-vss">
+<section id="section-3.1.2">
+          <h4 id="name-verifiable-secret-sharing">
+<a href="#section-3.1.2" class="section-number selfRef">3.1.2. </a><a href="#name-verifiable-secret-sharing" class="section-name selfRef">Verifiable Secret Sharing</a>
+          </h4>
+<p id="section-3.1.2-1">This section specifies Feldman's verifiable secret sharing (VSS) <span>[<a href="#Feldman" class="cite xref">Feldman</a>]</span>
+for implementing the sharing scheme. This functionality is implemented using
+ristretto255 <span>[<a href="#RISTRETTO" class="cite xref">RISTRETTO</a>]</span>.
+Share and Recover are implemented as follows, where Nshare = 2*Nscalar and Ncommitment = k*Ne,
+where Ne is the size of a serialized group element.<a href="#section-3.1.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.1.2-2">
+<pre>
+def Share(k, secret, rand):
+  # Construct the secret sharing polynomial
+  poly = [G.HashToScalar(secret, str(0))]
+  for i in range(1, k):
+    poly.extend(G.HashToScalar(rand, str(i)))
+
+  # Compute the secret (and polynomial) commitment
+  commitment = Commit(poly)
+
+  # Evaluate the polynomial at a random point
+  x = G.RandomScalar()
+  y = polynomial_evaluate(x, poly)
+
+  # Construct the share
+  x_enc = G.SerializeScalar(x)
+  y_enc = G.SerializeScalar(y)
+  share = x_enc || y_enc
+
+  return share, commitment
+
+def Recover(k, share_set):
+  if share_set.length &lt; k:
+    raise RecoveryFailedError
+
+  points = []
+  for share in share_set:
+    x = G.DeserializeScalar(share[0:Nshare])
+    y = G.DeserializeScalar(share[Nshare:])
+    points.append((x, y))
+
+  poly = polynomial_interpolation(points)
+  return poly[0]
+</pre><a href="#section-3.1.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-3.1.2-3">The helper functions <code>polynomial_evaluate</code> and <code>polynomial_interpolation</code> are as defined
+in the previous section. The helper function Commit is implemented as follows:<a href="#section-3.1.2-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.1.2-4">
+<pre>
+def Commit(poly):
+  commitment = nil
+  for coefficient in poly:
+    C_i = G.ScalarBaseMult(coefficient)
+    commitment = commitment || G.SerializeElement(C_i)
+  return commitment
+</pre><a href="#section-3.1.2-4" class="pilcrow">¶</a>
+</div>
+<p id="section-3.1.2-5">Moreover, VSS extends the syntax of SSS to add another function, Verify, that is
+used to check that a share is correct for a given commitment. Verify is implemented
+as follows.<a href="#section-3.1.2-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.1.2-6">
+<pre>
+def Verify(share, commitment):
+  x = G.DeserializeScalar(share[0:Nshare])
+  y = G.DeserializeScalar(share[Nshare:])
+  S' = G.ScalarBaseMult(y)
+
+  if len(commitment) % Ne != 0:
+    raise Exception("Invalid commitment length")
+  num_coefficients = len(commitment) / Ne
+  commitments = []
+  for i in range(0, num_coefficients):
+    c_i = G.DeserializeElement(commitment[i*Ne:(i+1)*Ne])
+    commitments.extend(c_i)
+
+  S = G.Identity()
+  for j in range(0, num_coefficients):
+    S = S + G.ScalarMult(commitments[j], pow(x, j))
+  return S == S'
+</pre><a href="#section-3.1.2-6" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="deps-oprf">
+<section id="section-3.2">
+        <h3 id="name-verifiable-oblivious-pseudo">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-verifiable-oblivious-pseudo" class="section-name selfRef">Verifiable Oblivious Pseudorandom Function</a>
+        </h3>
+<p id="section-3.2-1">A Verifiable Oblivious Pseudorandom Function (VOPRF) is a two-party protocol between client and
+server for computing a PRF such that the client learns the PRF output and neither party learns
+the input of the other. This specification depends on the prime-order VOPRF construction specified
+in <span>[<a href="#OPRF" class="cite xref">OPRF</a>]</span>, draft version -10, using the VOPRF mode (0x01) from <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-3.1" class="relref">Section 3.1</a></span>.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">The following VOPRF client functions are used:<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.2-3.1">Blind(element): Create and output (<code>blind</code>, <code>blinded_element</code>), consisting of a blinded
+representation of input <code>element</code>, denoted <code>blinded_element</code>, along with a value to revert
+the blinding process, denoted <code>blind</code>.<a href="#section-3.2-3.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-3.2">Finalize(element, blind, evaluated_element, proof): Finalize the OPRF evaluation using input <code>element</code>,
+random inverter <code>blind</code>, evaluation output <code>evaluated_element</code>, and proof <code>proof</code>,
+yielding output <code>oprf_output</code> or an error upon failure.<a href="#section-3.2-3.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.2-4">Moreover, the following OPRF server functions are used:<a href="#section-3.2-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.2-5.1">BlindEvaluate(k, blinded_element): Evaluate blinded input element <code>blinded_element</code> using
+input key <code>k</code>, yielding output element <code>evaluated_element</code> and proof <code>proof</code>. This is equivalent to
+the Evaluate function described in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-3.3.1" class="relref">Section 3.3.1</a></span>, where <code>k</code> is the private key parameter.<a href="#section-3.2-5.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-5.2">DeriveKeyPair(seed, info): Derive a private and public key pair deterministically
+from a seed and info parameter, as described in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-3.2" class="relref">Section 3.2</a></span>.<a href="#section-3.2-5.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.2-6">Finally, this specification makes use of the following shared functions and parameters:<a href="#section-3.2-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.2-7.1">SerializeElement(element): Map input <code>element</code> to a fixed-length byte array <code>buf</code>.<a href="#section-3.2-7.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-7.2">DeserializeElement(buf): Attempt to map input byte array <code>buf</code> to an OPRF group element.
+This function can raise a DeserializeError upon failure; see <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-2.1" class="relref">Section 2.1</a></span>
+for more details.<a href="#section-3.2-7.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-7.3">SerializeScalar(scalar): Map input <code>scalar</code> to a unique byte array buf of fixed
+length Nscalar bytes.<a href="#section-3.2-7.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-7.4">DeserializeScalar(buf): Attempt to map input byte array <code>buf</code> to an OPRF scalar element.
+This function raise a DeserializeError upon failure; see <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-2.1" class="relref">Section 2.1</a></span>
+for more details.<a href="#section-3.2-7.4" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-7.5">Nscalar: The size of a serialized OPRF scalar element output from SerializeScalar.<a href="#section-3.2-7.5" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.2-7.6">Noe: The size of a serialized OPRF group element output from SerializeElement.<a href="#section-3.2-7.6" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.2-8">This specification uses the verifiable OPRF from <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-3" class="relref">Section 3</a></span> with the
+OPRF(ristretto255, SHA-512) as defined in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-4.1.1" class="relref">Section 4.1.1</a></span>.<a href="#section-3.2-8" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="deps-kdf">
+<section id="section-3.3">
+        <h3 id="name-key-derivation-function">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-key-derivation-function" class="section-name selfRef">Key Derivation Function</a>
+        </h3>
+<p id="section-3.3-1">A Key Derivation Function (KDF) is a function that takes some source of initial
+keying material and uses it to derive one or more cryptographically strong keys.
+This specification uses a KDF with the following API and parameters:<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.3-2.1">Extract(salt, ikm): Extract a pseudorandom key of fixed length <code>Nx</code> bytes from
+input keying material <code>ikm</code> and an optional byte string <code>salt</code>.<a href="#section-3.3-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.3-2.2">Expand(prk, info, L): Expand a pseudorandom key <code>prk</code> using the optional string <code>info</code>
+into <code>L</code> bytes of output keying material.<a href="#section-3.3-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.3-2.3">Nx: The output size of the <code>Extract()</code> function in bytes.<a href="#section-3.3-2.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.3-3">This specification uses HKDF-SHA256 <span>[<a href="#HKDF" class="cite xref">HKDF</a>]</span> as the KDF function, where Nx = 32.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="deps-aead">
+<section id="section-3.4">
+        <h3 id="name-key-committing-authenticate">
+<a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-key-committing-authenticate" class="section-name selfRef">Key-Committing Authenticated Encryption with Associated Data</a>
+        </h3>
+<p id="section-3.4-1">A Key-Committing Authenticated Encryption with Associated Data (KCAEAD) scheme is an algorithm
+for encrypting and authenticating plaintext with some additional data.
+It has the following API and parameters:<a href="#section-3.4-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.4-2.1">
+            <code>Seal(key, nonce, aad, pt)</code>: Encrypt and authenticate plaintext
+<code>pt</code> with associated data <code>aad</code> using symmetric key <code>key</code> and nonce
+<code>nonce</code>, yielding ciphertext <code>ct</code> and tag <code>tag</code>.<a href="#section-3.4-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.4-2.2">
+            <code>Open(key, nonce, aad, ct, tag)</code>: Decrypt <code>ct</code> and tag <code>tag</code> using
+associated data <code>aad</code> with symmetric key <code>key</code> and nonce <code>nonce</code>,
+returning plaintext message <code>pt</code>. This function can raise an
+<code>OpenError</code> upon failure.<a href="#section-3.4-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.4-2.3">
+            <code>Nk</code>: The length in bytes of a key for this algorithm.<a href="#section-3.4-2.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.4-2.4">
+            <code>Nn</code>: The length in bytes of a nonce for this algorithm.<a href="#section-3.4-2.4" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-3.4-2.5">
+            <code>Nt</code>: The length in bytes of the authentication tag for this algorithm.<a href="#section-3.4-2.5" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-3.4-3">This specification uses a KCAEAD built on AES-128-GCM <span>[<a href="#GCM" class="cite xref">GCM</a>]</span>, HKDF-SHA256 <span>[<a href="#HKDF" class="cite xref">HKDF</a>]</span>, and
+HMAC-SHA256 <span>[<a href="#HMAC" class="cite xref">HMAC</a>]</span>. In particular, Nk = 16, Nn = 12, and Nt = 16. The Seal
+and Open functions are implemented as follows.<a href="#section-3.4-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.4-4">
+<pre>
+def Seal(key, nonce, aad, pt):
+  key_prk = Extract(nil, key)
+  aead_key = Expand(key_prk, "aead", Nk)
+  hmac_key = Expand(key_prk, "hmac", 32) // 32 bytes for SHA-256
+
+  ct = AES-128-GCM-Seal(key=aead_key, nonce=nonce, aad=aad, pt=pt)
+  tag = HMAC(key=hmac_key, message=ct)
+  return ct, tag
+
+def Open(key, nonce, aad, ct, tag):
+  key_prk = Extract(nil, key)
+  aead_key = Expand(key_prk, "aead", Nk)
+  hmac_key = Expand(key_prk, "hmac", 32) // 32 bytes for SHA-256
+
+  expected_tag = HMAC(key=hmac_key, message=ct)
+  if !constant_time_equal(expected_tag, tag):
+    raise OpenError
+  pt = AES-128-GCM-Open(key=aead_key, nonce=nonce, aad=aad, ct=ct) // This can raise an OpenError
+  return pt
+</pre><a href="#section-3.4-4" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="system-overview">
+<section id="section-4">
+      <h2 id="name-system-overview">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-system-overview" class="section-name selfRef">System Overview</a>
+      </h2>
+<p id="section-4-1">In STAR, clients generate encrypted measurements and send them to a single untrusted
+Aggregation Server in a report. Each report is effectively a random k-out-of-n share of
+the client data secret, along with some additional auxilary data. In a given amount of
+time, if the Aggregation Server receives the same encrypted value from k = REPORT_THRESHOLD
+clients, the server can recover the client data associated with each report. This ensures
+that clients only have their measurements revealed if they are part of a larger crowd,
+thereby achieving k-anonymity privacy (where k = REPORT_THRESHOLD).<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">Each client report is as secret as the underlying client data. That means low
+entropy client data values could be abused by an untrusted Aggregation Server in a
+dictionary attack to recover client data with fewer than REPORT_THRESHOLD honestly generated
+reports. To mitigate this, clients boost the entropy of their data using output from an Oblivious
+Pseudorandom Function (OPRF) provided by a separate, non-colluding Randomness Server.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-3">STAR also requires use of a client Anonymizing Proxy when interacting with the Aggregation
+Server so that the Aggregation Server cannot link a client report to a client which generated it.
+This document does not require a specific type of proxy. In practice, proxies built on <span>[<a href="#OHTTP" class="cite xref">OHTTP</a>]</span>
+or <span>[<a href="#Tor" class="cite xref">Tor</a>]</span> suffice; see <a href="#proxy-options" class="auto internal xref">Section 5</a> for more details.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">The overall architecture is shown in <a href="#arch" class="auto internal xref">Figure 1</a>, where <code>msg</code> is the measurement and <code>aux</code> is
+auxiliary data associated with a given client. The output of the interaction is a data value
+<code>msg</code> shared amongst REPORT_THRESHOLD honest clients and a list of additional auxiliary data
+values associated with each of the REPORT_THRESHOLD client reports, denoted <code>&lt;aux&gt;</code>.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<span id="name-system-architecture"></span><div id="arch">
+<figure id="figure-1">
+        <div id="section-4-5.1">
+          <div class="alignLeft art-svg artwork" id="section-4-5.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="592" width="664" viewBox="0 0 664 592" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px">
+              <path d="M 16,32 L 16,80" fill="none" stroke="black"></path>
+              <path d="M 48,80 L 48,224" fill="none" stroke="black"></path>
+              <path d="M 48,272 L 48,456" fill="none" stroke="black"></path>
+              <path d="M 120,32 L 120,80" fill="none" stroke="black"></path>
+              <path d="M 200,32 L 200,80" fill="none" stroke="black"></path>
+              <path d="M 200,272 L 200,320" fill="none" stroke="black"></path>
+              <path d="M 256,80 L 256,216" fill="none" stroke="black"></path>
+              <path d="M 264,320 L 264,408" fill="none" stroke="black"></path>
+              <path d="M 320,32 L 320,80" fill="none" stroke="black"></path>
+              <path d="M 320,272 L 320,320" fill="none" stroke="black"></path>
+              <path d="M 352,128 L 352,192" fill="none" stroke="black"></path>
+              <path d="M 432,32 L 432,80" fill="none" stroke="black"></path>
+              <path d="M 488,80 L 488,480" fill="none" stroke="black"></path>
+              <path d="M 488,528 L 488,544" fill="none" stroke="black"></path>
+              <path d="M 544,32 L 544,80" fill="none" stroke="black"></path>
+              <path d="M 560,352 L 560,400" fill="none" stroke="black"></path>
+              <path d="M 560,496 L 560,512" fill="none" stroke="black"></path>
+              <path d="M 16,32 L 120,32" fill="none" stroke="black"></path>
+              <path d="M 200,32 L 320,32" fill="none" stroke="black"></path>
+              <path d="M 432,32 L 544,32" fill="none" stroke="black"></path>
+              <path d="M 16,80 L 120,80" fill="none" stroke="black"></path>
+              <path d="M 200,80 L 320,80" fill="none" stroke="black"></path>
+              <path d="M 432,80 L 544,80" fill="none" stroke="black"></path>
+              <path d="M 264,110 L 344,110" fill="none" stroke="black"></path>
+              <path d="M 264,114 L 344,114" fill="none" stroke="black"></path>
+              <path d="M 48,144 L 248,144" fill="none" stroke="black"></path>
+              <path d="M 56,192 L 256,192" fill="none" stroke="black"></path>
+              <path d="M 264,206 L 344,206" fill="none" stroke="black"></path>
+              <path d="M 264,210 L 344,210" fill="none" stroke="black"></path>
+              <path d="M 200,272 L 320,272" fill="none" stroke="black"></path>
+              <path d="M 200,320 L 320,320" fill="none" stroke="black"></path>
+              <path d="M 496,334 L 552,334" fill="none" stroke="black"></path>
+              <path d="M 496,338 L 552,338" fill="none" stroke="black"></path>
+              <path d="M 48,352 L 256,352" fill="none" stroke="black"></path>
+              <path d="M 272,352 L 480,352" fill="none" stroke="black"></path>
+              <path d="M 56,400 L 256,400" fill="none" stroke="black"></path>
+              <path d="M 272,400 L 488,400" fill="none" stroke="black"></path>
+              <path d="M 496,414 L 552,414" fill="none" stroke="black"></path>
+              <path d="M 496,418 L 552,418" fill="none" stroke="black"></path>
+              <path d="M 496,478 L 552,478" fill="none" stroke="black"></path>
+              <path d="M 496,482 L 552,482" fill="none" stroke="black"></path>
+              <path d="M 496,526 L 552,526" fill="none" stroke="black"></path>
+              <path d="M 496,530 L 552,530" fill="none" stroke="black"></path>
+              <polygon class="arrowhead" points="496,544 484,538.4 484,549.6" fill="black" transform="rotate(90,488,544)"></polygon>
+              <polygon class="arrowhead" points="488,352 476,346.4 476,357.6" fill="black" transform="rotate(0,480,352)"></polygon>
+              <polygon class="arrowhead" points="256,144 244,138.4 244,149.6" fill="black" transform="rotate(0,248,144)"></polygon>
+              <polygon class="arrowhead" points="64,400 52,394.4 52,405.6" fill="black" transform="rotate(180,56,400)"></polygon>
+              <polygon class="arrowhead" points="64,192 52,186.4 52,197.6" fill="black" transform="rotate(180,56,192)"></polygon>
+              <g class="text">
+                <text x="68" y="52">Client</text>
+                <text x="260" y="52">Randomness</text>
+                <text x="488" y="52">Aggregation</text>
+                <text x="48" y="68">(msg,</text>
+                <text x="92" y="68">aux)</text>
+                <text x="260" y="68">Server</text>
+                <text x="484" y="68">Server</text>
+                <text x="352" y="116">\</text>
+                <text x="136" y="132">Request(Blind(msg))</text>
+                <text x="404" y="148">Randomness</text>
+                <text x="300" y="164">Evaluate</text>
+                <text x="384" y="164">Phase</text>
+                <text x="192" y="180">Response(...)</text>
+                <text x="352" y="212">/</text>
+                <text x="256" y="228">...</text>
+                <text x="36" y="244">Generate</text>
+                <text x="100" y="244">Report</text>
+                <text x="24" y="260">using</text>
+                <text x="92" y="260">randomness</text>
+                <text x="264" y="292">Anonymizing</text>
+                <text x="256" y="308">Proxy</text>
+                <text x="84" y="340">Report</text>
+                <text x="560" y="340">\</text>
+                <text x="520" y="372">Store</text>
+                <text x="596" y="372">Report</text>
+                <text x="416" y="388">Acknowledgement</text>
+                <text x="524" y="388">Report</text>
+                <text x="592" y="388">Phase</text>
+                <text x="264" y="420">...</text>
+                <text x="560" y="420">/</text>
+                <text x="480" y="436">.</text>
+                <text x="496" y="436">.</text>
+                <text x="48" y="468">...</text>
+                <text x="560" y="484">\</text>
+                <text x="456" y="500">Recover</text>
+                <text x="508" y="500">data</text>
+                <text x="616" y="500">Aggregation</text>
+                <text x="444" y="516">from</text>
+                <text x="496" y="516">Reports</text>
+                <text x="592" y="516">Phase</text>
+                <text x="560" y="532">/</text>
+                <text x="464" y="564">(msg,</text>
+                <text x="516" y="564">&lt;aux&gt;)</text>
+              </g>
+            </svg><a href="#section-4-5.1.1" class="pilcrow">¶</a>
+</div>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-system-architecture" class="selfRef">System Architecture</a>
+        </figcaption></figure>
+</div>
+<p id="section-4-6">In the following subsections, we describe each of the phases of STAR in more detail.<a href="#section-4-6" class="pilcrow">¶</a></p>
+<div id="randomness-phase">
+<section id="section-4.1">
+        <h3 id="name-randomness-phase">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-randomness-phase" class="section-name selfRef">Randomness Phase</a>
+        </h3>
+<p id="section-4.1-1">The randomness sampled from a client data <span class="bcp14">MUST</span> be a deterministic function of the measurement.
+Clients sample this randomness by running an OPRF protocol with the Randomness Server.
+This section describes how the Randomness Server is configured and then how clients
+interact with it for computing the randomness.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<div id="randomness-configuration">
+<section id="section-4.1.1">
+          <h4 id="name-configuration">
+<a href="#section-4.1.1" class="section-number selfRef">4.1.1. </a><a href="#name-configuration" class="section-name selfRef">Configuration</a>
+          </h4>
+<p id="section-4.1.1-1">STAR clients are configured with a Randomness Server URI and the Randomness Server public key <code>pkR</code>.
+Clients use this URI to send HTTP messages to the Randomness Server to complete the protocol.
+As an example, the Randomness Server URI might be https://randomness.example.<a href="#section-4.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-2">The Randomness Server only needs to configure an OPRF key pair per epoch. This is
+done as follows:<a href="#section-4.1.1-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.1-3">
+<pre>
+seed = random(32)
+(skR, pkR) = DeriveKeyPair(seed, "STAR")
+</pre><a href="#section-4.1.1-3" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="randomness-protocol">
+<section id="section-4.1.2">
+          <h4 id="name-randomness-protocol">
+<a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-randomness-protocol" class="section-name selfRef">Randomness Protocol</a>
+          </h4>
+<p id="section-4.1.2-1">This procedure works as follows. Let <code>secret</code> be the client's measurement to be used for deriving
+the randomness <code>rand</code>.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-2">Clients first generate the a context for invoking the OPRF protocol as follows:<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-3">
+<pre>
+client_context = SetupVOPRFClient(0x0001, pkR) // OPRF(ristretto255, SHA-512) ciphersuite
+</pre><a href="#section-4.1.2-3" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1.2-4">Clients then blind their measurement using this context as follows:<a href="#section-4.1.2-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-5">
+<pre>
+(blinded, blinded_element) = client_context.Blind(secret)
+</pre><a href="#section-4.1.2-5" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1.2-6">Clients then compute <code>randomness_request = OPRF.SerializeElement(blinded_element)</code> and send it
+to the Randomness Server URI in a HTTP POST message using content type "application/star-randomness-request".
+An example request is shown below.<a href="#section-4.1.2-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-7">
+<pre>
+:method = POST
+:scheme = https
+:authority = randomness.example
+:path = /
+accept = application/star-randomness-response
+content-type = application/star-randomness-request
+content-length = Noe
+
+&lt;Bytes containing a serialized blinded element&gt;
+</pre><a href="#section-4.1.2-7" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1.2-8">Upon receipt, the Randomness Server evaluates and returns a response.
+It does so by first creating a context for running the ORPF protocol as follows:<a href="#section-4.1.2-8" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-9">
+<pre>
+server_context = SetupVOPRFServer(0x0001, skR, pkR) // OPRF(ristretto255, SHA-512) ciphersuite
+</pre><a href="#section-4.1.2-9" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1.2-10">Here, <code>skR</code> and <code>pkR</code> are private and public keys generated as described in <a href="#randomness-configuration" class="auto internal xref">Section 4.1.1</a>.<a href="#section-4.1.2-10" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-11">The Randomness Server then computes <code>blinded_element = OPRF.DeserializeElement(randomness_request)</code>.
+If this fails, the Randomness Server returns an error in a 4xx response to the client. Otherwise,
+the server computes:<a href="#section-4.1.2-11" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-12">
+<pre>
+evaluated_element, proof = server_context.BlindEvaluate(sk, blinded_element)
+</pre><a href="#section-4.1.2-12" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1.2-13">The Randomness Server then serializes the evaluation output and proof to produce a randomness response
+as follows:<a href="#section-4.1.2-13" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-14">
+<pre>
+evaluated_element_enc = OPRF.SerializeElement(evaluated_element)
+proof_enc = OPRF.SerializeScalar(proof[0]) || OPRF.SerializeScalar(proof[1])
+randomness_response = evaluated_element_enc || proof_enc
+</pre><a href="#section-4.1.2-14" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1.2-15">This response is then sent to the client using the content type "application/star-randomness-response".
+An example response is below.<a href="#section-4.1.2-15" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-16">
+<pre>
+:status = 200
+content-type = application/star-randomness-response
+content-length = Noe
+
+&lt;Bytes containing randomness_response&gt;
+</pre><a href="#section-4.1.2-16" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1.2-17">Upon receipt, the client computes parses <code>randomness_response</code> to recover the evaluated element
+and proof as follows:<a href="#section-4.1.2-17" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-18">
+<pre>
+evaluated_element_enc || proof_enc = parse(randomness_response)
+evaluated_element = OPRF.DeserializeElement(evaluated_element_enc)
+proof = [OPRF.DeserializeScalar(proof_enc[0:Nshare]), OPRF.DeserializeScalar(proof_enc[Nshare:])]
+</pre><a href="#section-4.1.2-18" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1.2-19">If any of these steps fail, the client aborts the protocol. Otherwise, the client
+finalizes the OPRF protocol to compute the output <code>rand</code> as follows:<a href="#section-4.1.2-19" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1.2-20">
+<pre>
+rand = client_context.Finalize(secret, blind, evaluated_element, proof)
+</pre><a href="#section-4.1.2-20" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="report-phase">
+<section id="section-4.2">
+        <h3 id="name-reporting-phase">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-reporting-phase" class="section-name selfRef">Reporting Phase</a>
+        </h3>
+<p id="section-4.2-1">In the reporting phase, the client uses its measurement <code>secret</code> with auxiliary data <code>aux</code>
+and its derived randomness <code>rand</code> to produce a report for the Aggregation Server.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<div id="reporting-configuration">
+<section id="section-4.2.1">
+          <h4 id="name-reporting-configuration">
+<a href="#section-4.2.1" class="section-number selfRef">4.2.1. </a><a href="#name-reporting-configuration" class="section-name selfRef">Reporting Configuration</a>
+          </h4>
+<p id="section-4.2.1-1">The reporting phase requires the Aggregation Server to be configured with a URI for
+accepting reports. As an example, the Aggregation Server URI might be https://aggregator.example.
+The Aggregation Server is both an Oblivious HTTP Target and Oblivious Gateway Resource.<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-2">Clients are also configured with an Anonymizing Proxy that clients can use to send
+proxy reports to the Aggregation Server. The exact type of proxy is not specified here.
+See <a href="#proxy-options" class="auto internal xref">Section 5</a> for more details.<a href="#section-4.2.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="reporting-protocol">
+<section id="section-4.2.2">
+          <h4 id="name-reporting-protocol">
+<a href="#section-4.2.2" class="section-number selfRef">4.2.2. </a><a href="#name-reporting-protocol" class="section-name selfRef">Reporting Protocol</a>
+          </h4>
+<p id="section-4.2.2-1">This reporting protocol works as follows. First, the client stretches <code>rand</code> into three values
+<code>key_seed</code> and <code>share_coins</code>, and additionally derives an KCAEAD key and nonce from <code>key_seed</code>.<a href="#section-4.2.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2.2-2">
+<pre>
+// Randomness derivation
+rand_prk = Extract(nil, rand)
+key_seed = Expand(rand_prk, "key_seed", 16)
+share_coins = Expand(rand_prk, "share_coins", 16)
+
+// Symmetric encryption key derivation
+key_prk = Extract(nil, key_seed)
+key = Expand(key_prk, "key", Nk)
+nonce = Expand(key_prk, "nonce", Nn)
+</pre><a href="#section-4.2.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.2-3">The client then generates a secret share of <code>key_seed</code> using <code>share_coins</code> as randomness as follows:<a href="#section-4.2.2-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2.2-4">
+<pre>
+random_share, share_commitment = Share(REPORT_THRESHOLD, key_seed, share_coins)
+</pre><a href="#section-4.2.2-4" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.2-5">The client then encrypts <code>secret</code> and <code>aux</code> using the KCAEAD key and nonce as follows:<a href="#section-4.2.2-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2.2-6">
+<pre>
+report_data = len(secret, 4) || secret || len(aux, 4) || aux
+encrypted_report = Seal(key, nonce, nil, report_data)
+</pre><a href="#section-4.2.2-6" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.2-7">The function <code>len(x, n)</code> encodes the length of input <code>x</code> as an <code>n</code>-byte big-endian integer.<a href="#section-4.2.2-7" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-8">Finally, the client constructs a report consisting of <code>encrypted_report</code> and <code>random_share</code>,
+as well as <code>share_commitment</code>, and sends this to the Anonymizing Server in the subsequent
+epoch, i.e., after the Randomness Server has rotated its OPRF key.<a href="#section-4.2.2-8" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2.2-9">
+<pre>
+struct {
+  opaque encrypted_report&lt;1..2^16-1&gt;;
+  opaque random_share[Nshare];
+  opaque share_commitment[Ncommitment];
+} Report;
+</pre><a href="#section-4.2.2-9" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.2-10">Specifically, Clients send a Report to the Aggregation Server using an HTTP POST message
+with content type "application/star-report". An example message is below.<a href="#section-4.2.2-10" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2.2-11">
+<pre>
+:method = POST
+:scheme = https
+:authority = aggregator.example
+:path = /
+content-type = application/star-report
+content-length = &lt;Length of body&gt;
+
+&lt;Bytes containing a Report&gt;
+</pre><a href="#section-4.2.2-11" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.2-12">This message is sent to the Aggregation Server through the Anonymizing Proxy. See <a href="#proxy-options" class="auto internal xref">Section 5</a>
+for different types of proxy options.<a href="#section-4.2.2-12" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="aggregation-phase">
+<section id="section-4.3">
+        <h3 id="name-aggregation-phase">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-aggregation-phase" class="section-name selfRef">Aggregation Phase</a>
+        </h3>
+<p id="section-4.3-1">Aggregation is the final phase of STAR. It happens offline and does not require any
+communication between different STAR entities. It proceeds as follows. First, the
+Aggregation Server groups reports together based on their <code>share_commitment</code> value.
+If applicable, the Aggregation Server also verifies that each share commitment is correct,
+i.e., by invoking the Verify function on each <code>share</code> and <code>share_commitment</code> pair in
+candidate set of reports. Let <code>report_set</code> denote a set of at least REPORT_THRESHOLD
+reports that have a matching <code>share_commitment</code> value.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-2">Given this set, the Aggregation Server begins by running the secret share recovery algoritm
+as follows:<a href="#section-4.3-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-3">
+<pre>
+key_seed = Recover(report_set)
+</pre><a href="#section-4.3-3" class="pilcrow">¶</a>
+</div>
+<p id="section-4.3-4">If this fails, the Aggregation Server chooses a new candidate report share set and
+reruns the aggregation process. See <a href="#bad-reports" class="auto internal xref">Section 6.3</a> for more details.<a href="#section-4.3-4" class="pilcrow">¶</a></p>
+<p id="section-4.3-5">Otherwise, the Aggregation Server derives the same KCAEAD key and nonce from <code>key_seed</code> to
+decrypt each of the report ciphertexts in <code>report_set</code>.<a href="#section-4.3-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-6">
+<pre>
+key_prk = Extract(nil, key_seed)
+key = Expand(key_prk, "key", Nk)
+nonce = Expand(key_prk, "nonce", Nn)
+</pre><a href="#section-4.3-6" class="pilcrow">¶</a>
+</div>
+<p id="section-4.3-7">Each report ciphertext is decrypted as follows:<a href="#section-4.3-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-8">
+<pre>
+report_data = Open(key, nonce, nil, ct)
+</pre><a href="#section-4.3-8" class="pilcrow">¶</a>
+</div>
+<p id="section-4.3-9">The message <code>secret</code> and auxiliary data <code>aux</code> are then parsed from <code>report_data</code>.<a href="#section-4.3-9" class="pilcrow">¶</a></p>
+<p id="section-4.3-10">If this fails for any report, the Aggregation Server chooses a new candidate report share set and
+reruns the aggregation process. Otherwise, the Aggregation Server then outputs the <code>secret</code> and <code>aux</code>
+values for the corresponding reports.<a href="#section-4.3-10" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="auxiliary-data">
+<section id="section-4.4">
+        <h3 id="name-auxiliary-data">
+<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-auxiliary-data" class="section-name selfRef">Auxiliary data</a>
+        </h3>
+<p id="section-4.4-1">In <a href="#arch" class="auto internal xref">Figure 1</a>, <code>aux</code> refers to auxiliary or additional data that may be sent by clients, and
+is distinct from the measurement data protected by the K-anonymity guarantee. Auxiliary data
+is only revealed when the k-condition is met but, importantly, is not part of the k-condition
+itself. This data might be unique to some or all of the submissions, or omitted entirely. This
+can even be the actual measured value itself. For example: if we're measuring tabs open on a
+client, then the measurement being sent can be "city: Vancouver" and the aux data can be "7"
+for a particular client. The idea being, that we only reveal all the measurements once we
+know that there are at least K clients with city: Vancouver.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="proxy-options">
+<section id="section-5">
+      <h2 id="name-anonymizing-proxy-options">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-anonymizing-proxy-options" class="section-name selfRef">Anonymizing Proxy Options</a>
+      </h2>
+<p id="section-5-1">The Anonymizing Proxy can be instantiated using <span>[<a href="#OHTTP" class="cite xref">OHTTP</a>]</span>, <span>[<a href="#Tor" class="cite xref">Tor</a>]</span>, or even a TCP-layer proxy.
+The choice of which proxy to use depends on the application threat model. The fundamental
+requirement is that the Anonymizing Proxy hide the client IP address and any other
+unique client information from the Aggregation Server.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">In general, there are two ways clients could implement the proxy: at the application layer,
+e.g., via <span>[<a href="#OHTTP" class="cite xref">OHTTP</a>]</span>, or at the connection or transport layer, e.g., via <span>[<a href="#Tor" class="cite xref">Tor</a>]</span> or similar
+systems. We describe each below.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<div id="application-layer-proxy">
+<section id="section-5.1">
+        <h3 id="name-application-layer-proxy">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-application-layer-proxy" class="section-name selfRef">Application-Layer Proxy</a>
+        </h3>
+<p id="section-5.1-1">An application-layer proxy hides client identifying information from the Aggregation Server
+via application-layer intermediation. <span>[<a href="#OHTTP" class="cite xref">OHTTP</a>]</span> is the <span class="bcp14">RECOMMENDED</span> option for an application-layer
+proxy. <span>[<a href="#OHTTP" class="cite xref">OHTTP</a>]</span> ensures that a network adversary between the client and Anonymizing Proxy
+cannot link reports sent to the Aggregation Server (up to what is possible by traffic analysis).<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">OHTTP consists of four entities: client, Oblivious Relay Resource, Oblivious Gateway Resource,
+and Target Resource. In this context, the Target Resource is the Aggregation Server. The
+Aggregation Server can also act as the Oblvious Gateway Resource. Clients are configured with
+the URI of the Oblivious Relay Resource, and use this to forward requests to a Oblivious
+Gateway Resource. The Oblivious Gateway Resource then forwards requests to the Target as required.<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="connection-layer-proxy">
+<section id="section-5.2">
+        <h3 id="name-connection-layer-proxy">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-connection-layer-proxy" class="section-name selfRef">Connection-Layer Proxy</a>
+        </h3>
+<p id="section-5.2-1">A connection-layer proxy hides client identifying information from the Aggregation Server via
+connection-layer intermediation. <span>[<a href="#Tor" class="cite xref">Tor</a>]</span> is perhaps the most commonly known example of such a proxy.
+Clients can use Tor to connect to and send reports to the Aggregation Server. Other examples of
+connection-layer proxies include CONNECT-based HTTPS proxies, used in systems like Private Relay
+<span>[<a href="#PrivateRelay" class="cite xref">PrivateRelay</a>]</span> and TCP-layer proxies. TCP proxies only offer weak protection in practice since
+an adversary capable of eavesdropping on ingress and egress connections from the Anonymizing Proxy
+can trivially link data together.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-6">
+      <h2 id="name-security-considerations">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-6-1">This section contains security considerations for the draft.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<div id="sec-randomness-sampling">
+<section id="section-6.1">
+        <h3 id="name-randomness-sampling">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-randomness-sampling" class="section-name selfRef">Randomness Sampling</a>
+        </h3>
+<p id="section-6.1-1">Deterministic randomness <span class="bcp14">MUST</span> be sampled by clients to construct their STAR report, as discussed
+in <a href="#report-phase" class="auto internal xref">Section 4.2</a>. This randomness CANNOT be derived locally, and <span class="bcp14">MUST</span> be sampled from the
+Randomness Server (that runs an <span>[<a href="#OPRF" class="cite xref">OPRF</a>]</span> service).<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-2">For best-possible security, the Randomness Server <span class="bcp14">SHOULD</span> sample and use a new OPRF key for each
+time epoch <code>t</code>, where the length of epochs is determined by the application. The previous OPRF
+key that was used in epoch <code>t-1</code> can be safely deleted. As discussed in <a href="#leakage" class="auto internal xref">Section 6.5</a>, shorter
+epochs provide more protection from Aggregation Server attacks, but also reduce the
+window in which data collection occurs (and hence reduce the possibility that we will have
+enough reports to decrypt) while increasing the reporting latency.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">In this model, for further security, clients <span class="bcp14">SHOULD</span> sample their randomness in epoch <code>t</code> and
+then send it to the Aggregation Server in <code>t+1</code> (after the Randomness Server has rotated their
+secret key). This prevents the Aggregation Server from launching queries after receiving the
+client reports (<a href="#leakage" class="auto internal xref">Section 6.5</a>). It is also <span class="bcp14">RECOMMENDED</span> that the Randomness Server runs in
+verifiable mode, which allows clients to verify the randomness that they are being served
+<span>[<a href="#OPRF" class="cite xref">OPRF</a>]</span>.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="oblivious-submission">
+<section id="section-6.2">
+        <h3 id="name-oblivious-submission">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-oblivious-submission" class="section-name selfRef">Oblivious Submission</a>
+        </h3>
+<p id="section-6.2-1">The reports being submitted to an Aggregation Server in STAR <span class="bcp14">MUST</span> be detached from client identity.
+This is to ensure that the Aggregation Server does not learn exactly what each client submits,
+in the event that their measurement is revealed. This is achieved through the use of an Anonymizing
+Server, which is an OHTTP Oblivious Relay Resource. This server <span class="bcp14">MUST NOT</span> collude with the Aggregation
+Server. All the client responsibilities mentioned in section 7.1 of <span>[<a href="#OHTTP" class="cite xref">OHTTP</a>]</span> apply.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-2">The OHTTP Relay Resource and Randomness Server <span class="bcp14">MAY</span> be combined into a single entity, since client
+reports are protected by a TLS connection between the client and the Aggregation Server. Therefore,
+OHTTP support can be enabled without requiring any additional non-colluding parties. In this mode,
+the Randomness Server <span class="bcp14">SHOULD</span> allow two endpoints: (1) to evaluate the VOPRF functionality that
+provides clients with randomness, and (2) to proxy client reports to the Aggregation Server.
+However, this increases the privacy harm in case of collusion; see <a href="#collusion-aggregation-proxy" class="auto internal xref">Section 6.5.3</a>.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">If configured otherwise, clients can upload reports to the Aggregation Server using an existing
+anonymizing proxy service such as <span>[<a href="#Tor" class="cite xref">Tor</a>]</span>. However, use of OHTTP is likely to be the most efficient
+way to achieve oblivious submission.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="bad-reports">
+<section id="section-6.3">
+        <h3 id="name-malicious-clients">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-malicious-clients" class="section-name selfRef">Malicious Clients</a>
+        </h3>
+<p id="section-6.3-1">Malicious clients can perform a denial-of-service attacks on the system by sending bogus reports to
+the Aggregation Server. There are several types of bogus reports:<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.3-2.1">Reports with invalid shares, or corrupt reports. These are reports that will yield the incorrect
+secret when combined by the Aggregation Server.<a href="#section-6.3-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-6.3-2.2">Reports with invalid ciphertext, or garbage reports. These are reports that contain an encryption
+of the wrong measurement value (<code>secret</code>).<a href="#section-6.3-2.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-6.3-3">Given that the Aggregation Server creates a report set by grouping reports together by commitment, it is possible for a client to mount a Denial-of-Service (DoS) attack against a server in the Aggregation phase (<a href="#aggregation-phase" class="auto internal xref">Section 4.3</a>) by submitting an incorrect share for a particular commitment, which will cause the recovery process for that report set to fail. To prevent this attack, a verifiable secret sharing scheme, such as the one described in <a href="#dep-vss" class="auto internal xref">Section 3.1.2</a>, can be used to verify that the share commitments are correct for each share. This ensures that each share in a report set corresponds to the same secret.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+<p id="section-6.3-4">Garbage reports cannot easily be mitigated unless the Aggregation Server has a way to confirm that the
+recovered secret is correct for a given measurement value (<code>secret</code>). This might be done by allowing the
+Aggregation Server to query the Randomness Server on values of its choosing, but this opens the door to
+dictionary attacks.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+<p id="section-6.3-5">In the absence of protocol-level mitigations, Aggregation Servers can limit the impact of malicious
+clients by using higher-layer defences such as identity-based certification <span>[<a href="#Sybil" class="cite xref">Sybil</a>]</span>.<a href="#section-6.3-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="malicious-aggregation-server">
+<section id="section-6.4">
+        <h3 id="name-malicious-aggregation-serve">
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-malicious-aggregation-serve" class="section-name selfRef">Malicious Aggregation Server</a>
+        </h3>
+<div id="dictionary-attacks">
+<section id="section-6.4.1">
+          <h4 id="name-dictionary-attacks">
+<a href="#section-6.4.1" class="section-number selfRef">6.4.1. </a><a href="#name-dictionary-attacks" class="section-name selfRef">Dictionary Attacks</a>
+          </h4>
+<p id="section-6.4.1-1">The Aggregation Server may attempt to launch a dictionary attack against the client measurement,
+by repeatedly launching queries against the Randomness Server for measurements of its choice. The
+Aggregation Server could also detect the presence of a specific measurement in the set of received
+encrypted reports by querying the Randomness Server for that measurement.<a href="#section-6.4.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.4.1-2">This attack is mitigated by the fact that the Randomness Server regularly rotates the VOPRF key that
+they use, which reduces the window in which this attack can be launched (<a href="#sec-randomness-sampling" class="auto internal xref">Section 6.1</a>).
+Note that such attacks can also be limited in scope by maintaining out-of-band protections
+against entities that attempt to launch large numbers of queries in short time periods.<a href="#section-6.4.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sybil-attacks">
+<section id="section-6.4.2">
+          <h4 id="name-sybil-attacks">
+<a href="#section-6.4.2" class="section-number selfRef">6.4.2. </a><a href="#name-sybil-attacks" class="section-name selfRef">Sybil Attacks</a>
+          </h4>
+<p id="section-6.4.2-1">By their very nature, attacks where a malicious Aggregation Server injects clients into the
+system that send reports to try and reveal data from honest clients are an unavoidable
+consequence of building any threshold aggregation system. This system cannot provide
+comprehensive protection against such attacks. The time window in which such attacks can
+occur is restricted by rotating the VOPRF key (<a href="#sec-randomness-sampling" class="auto internal xref">Section 6.1</a>). Such attacks
+can also be limited in scope by using higher-layer defences such as identity-based
+certification <span>[<a href="#Sybil" class="cite xref">Sybil</a>]</span>.<a href="#section-6.4.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="leakage">
+<section id="section-6.5">
+        <h3 id="name-leakage-and-failure-model">
+<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-leakage-and-failure-model" class="section-name selfRef">Leakage and Failure Model</a>
+        </h3>
+<div id="size-of-anonymity-set">
+<section id="section-6.5.1">
+          <h4 id="name-size-of-anonymity-set">
+<a href="#section-6.5.1" class="section-number selfRef">6.5.1. </a><a href="#name-size-of-anonymity-set" class="section-name selfRef">Size of Anonymity Set</a>
+          </h4>
+<p id="section-6.5.1-1">Client reports immediately leak deterministic tags that are derived from the VOPRF output
+that is evaluated over client measurement. This has the immediate impact that the size of
+the anonymity set for each received measurement (i.e. which clients share the same measurement)
+is revealed, even if the measurement is not revealed. As long as client reports are sent
+via an <span>[<a href="#OHTTP" class="cite xref">OHTTP</a>]</span> Relay Resource, then the leakage derived from the anonymity sets themselves
+is significantly reduced. However, it may still be possible to use this leakage to reduce
+a client's privacy, and so care should be taken to not construct situations where counts
+of measurement subsets are likely to lead to deanonymization of clients or their data.<a href="#section-6.5.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="collusion-aggregation-randomness-servers">
+<section id="section-6.5.2">
+          <h4 id="name-collusion-between-aggregati">
+<a href="#section-6.5.2" class="section-number selfRef">6.5.2. </a><a href="#name-collusion-between-aggregati" class="section-name selfRef">Collusion between Aggregation and Randomness Servers</a>
+          </h4>
+<p id="section-6.5.2-1">Finally, note that if the Aggregation and Randomness Servers collude and jointly learn the
+VOPRF key, then the attack above essentially becomes an offline dictionary attack. As such,
+client security is not completely lost when collusion occurs, which represents a safer mode
+of failure when compared with Prio and Poplar.<a href="#section-6.5.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="collusion-aggregation-proxy">
+<section id="section-6.5.3">
+          <h4 id="name-collusion-between-aggregatio">
+<a href="#section-6.5.3" class="section-number selfRef">6.5.3. </a><a href="#name-collusion-between-aggregatio" class="section-name selfRef">Collusion between Aggregation Server and Anonymizing Proxy</a>
+          </h4>
+<p id="section-6.5.3-1">As mentioned in <a href="#oblivious-submission" class="auto internal xref">Section 6.2</a>, systems that depend on a relaying server to remove
+linkage between client reports and client identity rely on the assumption of non-collusion
+between the relay and the server processing the client reports. Given that STAR depends on
+such a system for guaranteeing that the Aggregation Server does not come to know which
+client submitted the STAR report (once decrypted), the same collusion risk applies.<a href="#section-6.5.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.5.3-2">It's worth mentioning here for completeness sake that if the OHTTP Relay Resource and
+Randomness Server are combined into a single entity as mentioned in <a href="#oblivious-submission" class="auto internal xref">Section 6.2</a>,
+then this worsens the potential leakage in case of collusion: if the entities responsible
+for the Aggregation Server and the Randomness Server collude as described in
+<a href="#collusion-aggregation-randomness-servers" class="auto internal xref">Section 6.5.2</a>, this results in the Aggregation Server in
+effect colluding with the anonymizing proxy.<a href="#section-6.5.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="comparisons-with-other-systems">
+<section id="section-7">
+      <h2 id="name-comparisons-with-other-syst">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-comparisons-with-other-syst" class="section-name selfRef">Comparisons with other Systems</a>
+      </h2>
+<p id="section-7-1">[[EDITOR NOTE: for information/discussion: consider removing before publication]]<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="private-heavy-hitter-discovery">
+<section id="section-7.1">
+        <h3 id="name-private-heavy-hitter-discov">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-private-heavy-hitter-discov" class="section-name selfRef">Private Heavy-Hitter Discovery</a>
+        </h3>
+<p id="section-7.1-1">STAR is similar in nature to private heavy-hitter discovery protocols, such as Poplar <span>[<a href="#Poplar" class="cite xref">Poplar</a>]</span>.
+In such systems, the Aggregation Server reveals the set of client measurements that are shared
+by at least K clients. STAR allows a single untrusted server to perform the aggregation process,
+as opposed to Poplar which requires two non-colluding servers that communicate with each other.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1-2">As a consequence, the STAR protocol is orders of magnitude more efficient than the Poplar
+approach, with respect to computational, network-usage, and financial metrics. Therefore,
+STAR scales much better for large numbers of client submissions. See the <span>[<a href="#STAR" class="cite xref">STAR</a>]</span> paper for
+more details on efficiency comparisons with the Poplar approach.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="general-aggregation">
+<section id="section-7.2">
+        <h3 id="name-general-aggregation">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-general-aggregation" class="section-name selfRef">General Aggregation</a>
+        </h3>
+<p id="section-7.2-1">In comparison to general aggregation protocols like Prio <span>[<a href="#Prio" class="cite xref">Prio</a>]</span>,
+the STAR protocol provides a more constrained set of functionality. However, STAR is
+significantly more efficient for the threshold aggregation functionality, requires only a
+single Aggregation Server, and is not limited to only processing numerical data types.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="protocol-leakage">
+<section id="section-7.3">
+        <h3 id="name-protocol-leakage">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-protocol-leakage" class="section-name selfRef">Protocol Leakage</a>
+        </h3>
+<p id="section-7.3-1">As we discuss in <a href="#leakage" class="auto internal xref">Section 6.5</a>, STAR leaks deterministic tags derived from the client
+measurement that reveal which (and how many) clients share the same measurements, even
+if the measurements themselves are not revealed. This also enables an online dictionary
+attack to be launched by the Aggregation Server by sending repeated VOPRF queries to the
+Randomness Server as discussed in <a href="#dictionary-attacks" class="auto internal xref">Section 6.4.1</a>.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<p id="section-7.3-2">The leakage of Prio is defined as whatever is leaked by the function that the aggregation
+computes. The leakage in Poplar allows the two Aggregation Servers to learn all heavy-hitting
+prefixes of the eventual heavy-hitting strings that are output. Note that in Poplar it is
+also possible to launch dictionary attacks of a similar nature to STAR by launching a
+Sybil attack <span>[<a href="#Sybil" class="cite xref">Sybil</a>]</span> that explicitly injects multiple measurements that share the same
+prefix into the aggregation. This attack would result in the aggregation process learning
+more about client inputs that share those prefixes.<a href="#section-7.3-2" class="pilcrow">¶</a></p>
+<p id="section-7.3-3">Finally, note that under collusion, the STAR security model requires the adversary to
+launch an offline dictionary attack against client measurements. In Prio and Poplar,
+security is immediately lost when collusion occurs.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="support-for-auxiliary-data">
+<section id="section-7.4">
+        <h3 id="name-support-for-auxiliary-data">
+<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-support-for-auxiliary-data" class="section-name selfRef">Support for auxiliary data</a>
+        </h3>
+<p id="section-7.4-1">It should be noted that clients can send auxiliary data (<a href="#auxiliary-data" class="auto internal xref">Section 4.4</a>) that is
+revealed only when the aggregation including their measurement succeeds (i.e. K-1 other
+clients send the same value). Such data is supported by neither Prio, nor Poplar.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-8">
+      <h2 id="name-iana-considerations">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<div id="protocol-message-media-types">
+<section id="section-8.1">
+        <h3 id="name-protocol-message-media-type">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-protocol-message-media-type" class="section-name selfRef">Protocol Message Media Types</a>
+        </h3>
+<p id="section-8.1-1">This specification defines the following protocol messages, along with their
+corresponding media types types:<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-8.1-2.1">Randomness request <a href="#randomness-phase" class="auto internal xref">Section 4.1</a>: "application/star-randomness-request"<a href="#section-8.1-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-8.1-2.2">Randomness response <a href="#randomness-phase" class="auto internal xref">Section 4.1</a>: "application/star-randomness-response"<a href="#section-8.1-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-8.1-2.3">Report <a href="#report-phase" class="auto internal xref">Section 4.2</a>: "application/star-report"<a href="#section-8.1-2.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-8.1-3">The definition for each media type is in the following subsections.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
+<p id="section-8.1-4">Protocol message format evolution is supported through the definition of new
+formats that are identified by new media types.<a href="#section-8.1-4" class="pilcrow">¶</a></p>
+<p id="section-8.1-5">IANA [shall update / has updated] the "Media Types" registry at
+https://www.iana.org/assignments/media-types with the registration information
+in this section for all media types listed above.<a href="#section-8.1-5" class="pilcrow">¶</a></p>
+<p id="section-8.1-6">[OPEN ISSUE: Solicit review of these allocations from domain experts.]<a href="#section-8.1-6" class="pilcrow">¶</a></p>
+<div id="applicationstar-randomness-request-media-type">
+<section id="section-8.1.1">
+          <h4 id="name-application-star-randomness">
+<a href="#section-8.1.1" class="section-number selfRef">8.1.1. </a><a href="#name-application-star-randomness" class="section-name selfRef">"application/star-randomness-request" media type</a>
+          </h4>
+<span class="break"></span><dl class="dlParallel" id="section-8.1.1-1">
+            <dt id="section-8.1.1-1.1">Type name:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.2">
+              <p id="section-8.1.1-1.2.1">application<a href="#section-8.1.1-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.3">Subtype name:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.4">
+              <p id="section-8.1.1-1.4.1">star-randomness-request<a href="#section-8.1.1-1.4.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.5">Required parameters:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.6">
+              <p id="section-8.1.1-1.6.1">N/A<a href="#section-8.1.1-1.6.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.7">Optional parameters:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.8">
+              <p id="section-8.1.1-1.8.1">None<a href="#section-8.1.1-1.8.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.9">Encoding considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.10">
+              <p id="section-8.1.1-1.10.1">only "8bit" or "binary" is permitted<a href="#section-8.1.1-1.10.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.11">Security considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.12">
+              <p id="section-8.1.1-1.12.1">see <a href="#security-considerations" class="auto internal xref">Section 6</a><a href="#section-8.1.1-1.12.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.13">Interoperability considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.14">
+              <p id="section-8.1.1-1.14.1">N/A<a href="#section-8.1.1-1.14.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.15">Published specification:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.16">
+              <p id="section-8.1.1-1.16.1">this specification<a href="#section-8.1.1-1.16.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.17">Applications that use this media type:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.18">
+              <p id="section-8.1.1-1.18.1">N/A<a href="#section-8.1.1-1.18.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.19">Fragment identifier considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.20">
+              <p id="section-8.1.1-1.20.1">N/A<a href="#section-8.1.1-1.20.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.21">Additional information:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.22">
+              <span class="break"></span><dl class="dlParallel" id="section-8.1.1-1.22.1">
+                <dt id="section-8.1.1-1.22.1.1">Magic number(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.1-1.22.1.2">N/A<a href="#section-8.1.1-1.22.1.2" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.1-1.22.1.3">Deprecated alias names for this type:</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.1-1.22.1.4">N/A<a href="#section-8.1.1-1.22.1.4" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.1-1.22.1.5">File extension(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.1-1.22.1.6">N/A<a href="#section-8.1.1-1.22.1.6" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.1-1.22.1.7">Macintosh file type code(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.1-1.22.1.8">N/A<a href="#section-8.1.1-1.22.1.8" class="pilcrow">¶</a>
+</dd>
+              <dd class="break"></dd>
+</dl>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.23">Person and email address to contact for further information:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.24">
+              <p id="section-8.1.1-1.24.1">see Authors' Addresses section<a href="#section-8.1.1-1.24.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.25">Intended usage:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.26">
+              <p id="section-8.1.1-1.26.1">COMMON<a href="#section-8.1.1-1.26.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.27">Restrictions on usage:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.28">
+              <p id="section-8.1.1-1.28.1">N/A<a href="#section-8.1.1-1.28.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.29">Author:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.30">
+              <p id="section-8.1.1-1.30.1">see Authors' Addresses section<a href="#section-8.1.1-1.30.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.1-1.31">Change controller:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.1-1.32">
+              <p id="section-8.1.1-1.32.1">IESG<a href="#section-8.1.1-1.32.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="applicationstar-report-media-type">
+<section id="section-8.1.2">
+          <h4 id="name-application-star-report-med">
+<a href="#section-8.1.2" class="section-number selfRef">8.1.2. </a><a href="#name-application-star-report-med" class="section-name selfRef">"application/star-report" media type</a>
+          </h4>
+<span class="break"></span><dl class="dlParallel" id="section-8.1.2-1">
+            <dt id="section-8.1.2-1.1">Type name:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.2">
+              <p id="section-8.1.2-1.2.1">application<a href="#section-8.1.2-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.3">Subtype name:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.4">
+              <p id="section-8.1.2-1.4.1">star-report<a href="#section-8.1.2-1.4.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.5">Required parameters:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.6">
+              <p id="section-8.1.2-1.6.1">N/A<a href="#section-8.1.2-1.6.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.7">Optional parameters:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.8">
+              <p id="section-8.1.2-1.8.1">None<a href="#section-8.1.2-1.8.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.9">Encoding considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.10">
+              <p id="section-8.1.2-1.10.1">only "8bit" or "binary" is permitted<a href="#section-8.1.2-1.10.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.11">Security considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.12">
+              <p id="section-8.1.2-1.12.1">see <a href="#security-considerations" class="auto internal xref">Section 6</a><a href="#section-8.1.2-1.12.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.13">Interoperability considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.14">
+              <p id="section-8.1.2-1.14.1">N/A<a href="#section-8.1.2-1.14.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.15">Published specification:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.16">
+              <p id="section-8.1.2-1.16.1">this specification<a href="#section-8.1.2-1.16.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.17">Applications that use this media type:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.18">
+              <p id="section-8.1.2-1.18.1">N/A<a href="#section-8.1.2-1.18.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.19">Fragment identifier considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.20">
+              <p id="section-8.1.2-1.20.1">N/A<a href="#section-8.1.2-1.20.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.21">Additional information:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.22">
+              <span class="break"></span><dl class="dlParallel" id="section-8.1.2-1.22.1">
+                <dt id="section-8.1.2-1.22.1.1">Magic number(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.2-1.22.1.2">N/A<a href="#section-8.1.2-1.22.1.2" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.2-1.22.1.3">Deprecated alias names for this type:</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.2-1.22.1.4">N/A<a href="#section-8.1.2-1.22.1.4" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.2-1.22.1.5">File extension(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.2-1.22.1.6">N/A<a href="#section-8.1.2-1.22.1.6" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.2-1.22.1.7">Macintosh file type code(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.2-1.22.1.8">N/A<a href="#section-8.1.2-1.22.1.8" class="pilcrow">¶</a>
+</dd>
+              <dd class="break"></dd>
+</dl>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.23">Person and email address to contact for further information:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.24">
+              <p id="section-8.1.2-1.24.1">see Authors' Addresses section<a href="#section-8.1.2-1.24.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.25">Intended usage:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.26">
+              <p id="section-8.1.2-1.26.1">COMMON<a href="#section-8.1.2-1.26.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.27">Restrictions on usage:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.28">
+              <p id="section-8.1.2-1.28.1">N/A<a href="#section-8.1.2-1.28.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.29">Author:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.30">
+              <p id="section-8.1.2-1.30.1">see Authors' Addresses section<a href="#section-8.1.2-1.30.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.2-1.31">Change controller:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.2-1.32">
+              <p id="section-8.1.2-1.32.1">IESG<a href="#section-8.1.2-1.32.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="applicationstar-randomness-response-media-type">
+<section id="section-8.1.3">
+          <h4 id="name-application-star-randomness-">
+<a href="#section-8.1.3" class="section-number selfRef">8.1.3. </a><a href="#name-application-star-randomness-" class="section-name selfRef">"application/star-randomness-response" media type</a>
+          </h4>
+<span class="break"></span><dl class="dlParallel" id="section-8.1.3-1">
+            <dt id="section-8.1.3-1.1">Type name:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.2">
+              <p id="section-8.1.3-1.2.1">application<a href="#section-8.1.3-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.3">Subtype name:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.4">
+              <p id="section-8.1.3-1.4.1">star-randomness-response<a href="#section-8.1.3-1.4.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.5">Required parameters:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.6">
+              <p id="section-8.1.3-1.6.1">N/A<a href="#section-8.1.3-1.6.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.7">Optional parameters:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.8">
+              <p id="section-8.1.3-1.8.1">None<a href="#section-8.1.3-1.8.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.9">Encoding considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.10">
+              <p id="section-8.1.3-1.10.1">only "8bit" or "binary" is permitted<a href="#section-8.1.3-1.10.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.11">Security considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.12">
+              <p id="section-8.1.3-1.12.1">see <a href="#security-considerations" class="auto internal xref">Section 6</a><a href="#section-8.1.3-1.12.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.13">Interoperability considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.14">
+              <p id="section-8.1.3-1.14.1">N/A<a href="#section-8.1.3-1.14.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.15">Published specification:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.16">
+              <p id="section-8.1.3-1.16.1">this specification<a href="#section-8.1.3-1.16.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.17">Applications that use this media type:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.18">
+              <p id="section-8.1.3-1.18.1">N/A<a href="#section-8.1.3-1.18.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.19">Fragment identifier considerations:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.20">
+              <p id="section-8.1.3-1.20.1">N/A<a href="#section-8.1.3-1.20.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.21">Additional information:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.22">
+              <span class="break"></span><dl class="dlParallel" id="section-8.1.3-1.22.1">
+                <dt id="section-8.1.3-1.22.1.1">Magic number(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.3-1.22.1.2">N/A<a href="#section-8.1.3-1.22.1.2" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.3-1.22.1.3">Deprecated alias names for this type:</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.3-1.22.1.4">N/A<a href="#section-8.1.3-1.22.1.4" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.3-1.22.1.5">File extension(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.3-1.22.1.6">N/A<a href="#section-8.1.3-1.22.1.6" class="pilcrow">¶</a>
+</dd>
+                <dd class="break"></dd>
+<dt id="section-8.1.3-1.22.1.7">Macintosh file type code(s):</dt>
+                <dd style="margin-left: 1.5em" id="section-8.1.3-1.22.1.8">N/A<a href="#section-8.1.3-1.22.1.8" class="pilcrow">¶</a>
+</dd>
+              <dd class="break"></dd>
+</dl>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.23">Person and email address to contact for further information:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.24">
+              <p id="section-8.1.3-1.24.1">see Authors' Addresses section<a href="#section-8.1.3-1.24.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.25">Intended usage:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.26">
+              <p id="section-8.1.3-1.26.1">COMMON<a href="#section-8.1.3-1.26.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.27">Restrictions on usage:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.28">
+              <p id="section-8.1.3-1.28.1">N/A<a href="#section-8.1.3-1.28.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.29">Author:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.30">
+              <p id="section-8.1.3-1.30.1">see Authors' Addresses section<a href="#section-8.1.3-1.30.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-8.1.3-1.31">Change controller:</dt>
+            <dd style="margin-left: 1.5em" id="section-8.1.3-1.32">
+              <p id="section-8.1.3-1.32.1">IESG<a href="#section-8.1.3-1.32.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<section id="section-9">
+      <h2 id="name-references">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<section id="section-9.1">
+        <h3 id="name-normative-references">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="FROST">[FROST]</dt>
+        <dd>
+<span class="refAuthor">Connolly, D.</span>, <span class="refAuthor">Komlo, C.</span>, <span class="refAuthor">Goldberg, I.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Two-Round Threshold Schnorr Signatures with FROST"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-frost-12</span>, <time datetime="2023-01-24" class="refDate">24 January 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-frost-12">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-frost-12</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="GCM">[GCM]</dt>
+        <dd>
+<span class="refAuthor">Dworkin, M.</span>, <span class="refTitle">"Recommendation for block cipher modes of operation :: GaloisCounter Mode (GCM) and GMAC"</span>, <span class="seriesInfo">National Institute of Standards and Technology report</span>, <span class="seriesInfo">DOI 10.6028/nist.sp.800-38d</span>, <time datetime="2007" class="refDate">2007</time>, <span>&lt;<a href="https://doi.org/10.6028/nist.sp.800-38d">https://doi.org/10.6028/nist.sp.800-38d</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="HKDF">[HKDF]</dt>
+        <dd>
+<span class="refAuthor">Krawczyk, H.</span> and <span class="refAuthor">P. Eronen</span>, <span class="refTitle">"HMAC-based Extract-and-Expand Key Derivation Function (HKDF)"</span>, <span class="seriesInfo">RFC 5869</span>, <span class="seriesInfo">DOI 10.17487/RFC5869</span>, <time datetime="2010-05" class="refDate">May 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5869">https://www.rfc-editor.org/rfc/rfc5869</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="HMAC">[HMAC]</dt>
+        <dd>
+<span class="refAuthor">Krawczyk, H.</span>, <span class="refAuthor">Bellare, M.</span>, and <span class="refAuthor">R. Canetti</span>, <span class="refTitle">"HMAC: Keyed-Hashing for Message Authentication"</span>, <span class="seriesInfo">RFC 2104</span>, <span class="seriesInfo">DOI 10.17487/RFC2104</span>, <time datetime="1997-02" class="refDate">February 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2104">https://www.rfc-editor.org/rfc/rfc2104</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OPRF">[OPRF]</dt>
+        <dd>
+<span class="refAuthor">Davidson, A.</span>, <span class="refAuthor">Faz-Hernandez, A.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious Pseudorandom Functions (OPRFs) using Prime-Order Groups"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-voprf-20</span>, <time datetime="2023-02-02" class="refDate">2 February 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+        <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RISTRETTO">[RISTRETTO]</dt>
+      <dd>
+<span class="refAuthor">de Valence, H.</span>, <span class="refAuthor">Grigg, J.</span>, <span class="refAuthor">Hamburg, M.</span>, <span class="refAuthor">Lovecruft, I.</span>, <span class="refAuthor">Tankersley, G.</span>, and <span class="refAuthor">F. Valsorda</span>, <span class="refTitle">"The ristretto255 and decaf448 Groups"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-ristretto255-decaf448-06</span>, <time datetime="2023-02-13" class="refDate">13 February 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-ristretto255-decaf448-06">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-ristretto255-decaf448-06</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+<section id="section-9.2">
+        <h3 id="name-informative-references">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="Brave">[Brave]</dt>
+        <dd>
+<span class="refTitle">"Brave Browser"</span>, <span>n.d.</span>, <span>&lt;<a href="https://brave.com">https://brave.com</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="Feldman">[Feldman]</dt>
+        <dd>
+<span class="refAuthor">Feldman, P.</span>, <span class="refTitle">"A practical scheme for non-interactive verifiable secret sharing"</span>, <span class="seriesInfo">28th Annual Symposium on Foundations of Computer Science (sfcs 1987)</span>, <span class="seriesInfo">DOI 10.1109/sfcs.1987.4</span>, <time datetime="1987-10" class="refDate">October 1987</time>, <span>&lt;<a href="https://doi.org/10.1109/sfcs.1987.4">https://doi.org/10.1109/sfcs.1987.4</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OHTTP">[OHTTP]</dt>
+        <dd>
+<span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious HTTP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-ohai-ohttp-06</span>, <time datetime="2022-12-15" class="refDate">15 December 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-ohai-ohttp-06">https://datatracker.ietf.org/doc/html/draft-ietf-ohai-ohttp-06</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="Poplar">[Poplar]</dt>
+        <dd>
+<span class="refAuthor">Boneh, D.</span>, <span class="refAuthor">Boyle, E.</span>, <span class="refAuthor">Corrigan-Gibbs, H.</span>, <span class="refAuthor">Gilboa, N.</span>, and <span class="refAuthor">Y. Ishai</span>, <span class="refTitle">"Lightweight Techniques for Private Heavy Hitters"</span>, <time datetime="2022-01-04" class="refDate">4 January 2022</time>, <span>&lt;<a href="https://eprint.iacr.org/2021/017">https://eprint.iacr.org/2021/017</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="Prio">[Prio]</dt>
+        <dd>
+<span class="refAuthor">Geoghegan, T.</span>, <span class="refAuthor">Patton, C.</span>, <span class="refAuthor">Rescorla, E.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Privacy Preserving Measurement"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-gpew-priv-ppm-01</span>, <time datetime="2022-03-07" class="refDate">7 March 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-gpew-priv-ppm-01">https://datatracker.ietf.org/doc/html/draft-gpew-priv-ppm-01</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="PrivateRelay">[PrivateRelay]</dt>
+        <dd>
+<span class="refTitle">"iCloud Private Relay Overview"</span>, <time datetime="2021" class="refDate">2021</time>, <span>&lt;<a href="https://www.apple.com/icloud/docs/iCloud_Private_Relay_Overview_Dec2021.pdf">https://www.apple.com/icloud/docs/iCloud_Private_Relay_Overview_Dec2021.pdf</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="SGCM">[SGCM]</dt>
+        <dd>
+<span class="refAuthor">Saarinen, M.-J. O.</span>, <span class="refTitle">"SGCM: The Sophie Germain Counter Mode"</span>, <time datetime="2011-11-04" class="refDate">4 November 2011</time>, <span>&lt;<a href="https://eprint.iacr.org/2011/326">https://eprint.iacr.org/2011/326</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="Shamir">[Shamir]</dt>
+        <dd>
+<span class="refAuthor">Shamir, A.</span>, <span class="refTitle">"How to share a secret"</span>, <time datetime="1979-11-01" class="refDate">1 November 1979</time>, <span>&lt;<a href="https://dl.acm.org/doi/10.1145/359168.359176">https://dl.acm.org/doi/10.1145/359168.359176</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="STAR">[STAR]</dt>
+        <dd>
+<span class="refAuthor">Davidson, A.</span>, <span class="refAuthor">Snyder, P.</span>, <span class="refAuthor">Quirk, E.</span>, <span class="refAuthor">Genereux, J.</span>, <span class="refAuthor">Haddadi, H.</span>, and <span class="refAuthor">B. Livshits</span>, <span class="refTitle">"STAR: Distributed Secret Sharing for Private Threshold Aggregation Reporting"</span>, <time datetime="2022-04-10" class="refDate">10 April 2022</time>, <span>&lt;<a href="https://arxiv.org/abs/2109.10074">https://arxiv.org/abs/2109.10074</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="Sybil">[Sybil]</dt>
+        <dd>
+<span class="refAuthor">Douceur, J.</span>, <span class="refTitle">"The Sybil Attack"</span>, <time datetime="2002-10-10" class="refDate">10 October 2002</time>, <span>&lt;<a href="https://link.springer.com/chapter/10.1007/3-540-45748-8_24">https://link.springer.com/chapter/10.1007/3-540-45748-8_24</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="Tor">[Tor]</dt>
+      <dd>
+<span class="refAuthor">Dingledine, R.</span>, <span class="refAuthor">Mathewson, N.</span>, and <span class="refAuthor">P. Syverson</span>, <span class="refTitle">"Tor: The Second-Generation Onion Router"</span>, <time datetime="2004" class="refDate">2004</time>, <span>&lt;<a href="https://svn-archive.torproject.org/svn/projects/design-paper/tor-design.pdf">https://svn-archive.torproject.org/svn/projects/design-paper/tor-design.pdf</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</section>
+<div id="acknowledgments">
+<section id="appendix-A">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-A-1">The authors would like to thank the authors of the original <span>[<a href="#STAR" class="cite xref">STAR</a>]</span> paper, which forms the basis for this document.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-B">
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Alex Davidson</span></div>
+<div dir="auto" class="left"><span class="org">Brave Software</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:alex.davidson92@gmail.com" class="email">alex.davidson92@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Shivan Kaul Sahib</span></div>
+<div dir="auto" class="left"><span class="org">Brave Software</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:shivankaulsahib@gmail.com" class="email">shivankaulsahib@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Peter Snyder</span></div>
+<div dir="auto" class="left"><span class="org">Brave Software</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:pes@brave.com" class="email">pes@brave.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Christopher A. Wood</span></div>
+<div dir="auto" class="left"><span class="org">Cloudflare</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:caw@heapingbits.net" class="email">caw@heapingbits.net</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2003 @@
+{
+  "magic": "E!vIA5L86J2I",
+  "timestamp": "2023-02-16T00:01:44.001133+00:00",
+  "repo": "ShivanKaul/star-spec",
+  "labels": [
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    },
+    {
+      "name": "clarify",
+      "description": "",
+      "color": "77DF20"
+    },
+    {
+      "name": "comparison",
+      "description": "",
+      "color": "96C8F9"
+    }
+  ],
+  "issues": [
+    {
+      "number": 1,
+      "id": "I_kwDOGyWsmM5NM7qR",
+      "title": "Be prescriptive about use of oblivious HTTP",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/1",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "The draft currently says that either Tor or OHTTP should be used for de-linking client identity from measurement submission. We should specify in more detail how exactly OHTTP should be used (and perhaps why only that).",
+      "createdAt": "2022-07-06T06:19:13Z",
+      "updatedAt": "2022-07-11T17:20:07Z",
+      "closedAt": "2022-07-11T17:20:07Z",
+      "comments": []
+    },
+    {
+      "number": 2,
+      "id": "I_kwDOGyWsmM5NM8kK",
+      "title": "Only use \"regular\" STAR, move STARlite to a new optional section",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/2",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "The new section can be called \"Alternative Deployments\". The WG has already conceded multiple non-colluding servers, so adding a requirement for a non-colluding OPRF server seems fine. ",
+      "createdAt": "2022-07-06T06:21:50Z",
+      "updatedAt": "2022-07-11T17:20:24Z",
+      "closedAt": "2022-07-11T17:20:24Z",
+      "comments": [
+        {
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I don't see any mention of STARLite currently in the draft. Maybe we could just leave it out? Do you think that members of the WG will be interested in it?",
+          "createdAt": "2022-07-07T13:31:09Z",
+          "updatedAt": "2022-07-07T13:31:09Z"
+        },
+        {
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@ShivanKaul Based on out-of-band conversations, we can close this issue right?",
+          "createdAt": "2022-07-11T10:33:06Z",
+          "updatedAt": "2022-07-11T10:33:06Z"
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "id": "I_kwDOGyWsmM5NM9zh",
+      "title": "Compare security guarantees with Poplar",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/3",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "In particular, if the server colluded with the OHTTP proxy, then the privacy properties fail. Would be worth outlining this more, also present about it. ",
+      "createdAt": "2022-07-06T06:25:18Z",
+      "updatedAt": "2022-07-11T17:17:49Z",
+      "closedAt": "2022-07-11T17:17:49Z",
+      "comments": [
+        {
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "body": "Talk about how if the aggregation server is bad, then the main server can dictionary attack the values. ",
+          "createdAt": "2022-07-06T14:49:07Z",
+          "updatedAt": "2022-07-06T14:49:07Z"
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "id": "I_kwDOGyWsmM5NPqoi",
+      "title": "Clarify what aux data is and how it's used",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/4",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Aux data is additional data, distinct from the measurement data protected by the K-anonymity guarantee.  Aux data is only revealed when the k-condition is met, but importantly, is not part of the k-condition itself.  Aux data might be unique to some or all of the submissions, or omitted entirely. This can even be the actual measured value itself. For example: if we're measuring tabs open on a client, then the measurement being sent can be \"city: Vancouver\" and the aux data can be \"7\" for a particular client. The idea being, that we only reveal all the measurements once we know that there are at least K clients with city: Vancouver. ",
+      "createdAt": "2022-07-06T14:46:17Z",
+      "updatedAt": "2022-07-08T09:02:12Z",
+      "closedAt": "2022-07-08T09:02:12Z",
+      "comments": []
+    },
+    {
+      "number": 5,
+      "id": "I_kwDOGyWsmM5NPsMc",
+      "title": "Clarify what we mean by \"randomness\"",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/5",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-07-06T14:51:09Z",
+      "updatedAt": "2022-07-11T17:18:14Z",
+      "closedAt": "2022-07-11T17:18:14Z",
+      "comments": []
+    },
+    {
+      "number": 7,
+      "id": "I_kwDOGyWsmM5NR_bt",
+      "title": "Remove use of \"puncturable\" POPRFs from the draft",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/7",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Don't need it any more, simply rotate the key.",
+      "createdAt": "2022-07-06T22:37:27Z",
+      "updatedAt": "2022-07-08T09:07:12Z",
+      "closedAt": "2022-07-08T09:07:12Z",
+      "comments": []
+    },
+    {
+      "number": 8,
+      "id": "I_kwDOGyWsmM5NSA3B",
+      "title": "STAR leaks the fact that 2 encrypted measurements are the same ",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/8",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [
+        "clarify",
+        "comparison"
+      ],
+      "body": "This is different from poplar1 -- even before the threshold is satisfied, the server comes to know which subsets of messages are the same value.",
+      "createdAt": "2022-07-06T22:42:33Z",
+      "updatedAt": "2022-07-11T09:43:34Z",
+      "closedAt": "2022-07-11T09:43:34Z",
+      "comments": [
+        {
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "body": "Also leaks the count of the measurements.",
+          "createdAt": "2022-07-06T22:44:06Z",
+          "updatedAt": "2022-07-06T22:44:06Z"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "id": "I_kwDOGyWsmM5NSBBl",
+      "title": "Clients can send auxiliary info",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/9",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [
+        "clarify",
+        "comparison"
+      ],
+      "body": "",
+      "createdAt": "2022-07-06T22:43:00Z",
+      "updatedAt": "2022-07-08T09:02:12Z",
+      "closedAt": "2022-07-08T09:02:12Z",
+      "comments": []
+    },
+    {
+      "number": 10,
+      "id": "I_kwDOGyWsmM5NSBZT",
+      "title": "Requires only one server in aggregation phase",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/10",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [
+        "comparison"
+      ],
+      "body": "A lot cheaper, check paper for details.",
+      "createdAt": "2022-07-06T22:45:06Z",
+      "updatedAt": "2022-07-11T17:18:14Z",
+      "closedAt": "2022-07-11T17:18:14Z",
+      "comments": [
+        {
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "body": "For deployment purposes, you don't even need a randomness server per se -- you just need some non-colluding server that runs OPRFs-as-a-service. ",
+          "createdAt": "2022-07-06T22:51:19Z",
+          "updatedAt": "2022-07-06T22:51:19Z"
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "id": "I_kwDOGyWsmM5NSMOR",
+      "title": "Collusion risk",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/11",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [
+        "clarify"
+      ],
+      "body": "Even if Randomness server and Aggregation server collude, you only lose the entropy gain. It reverts to being the local mode i.e. STARlite. \r\nHowever if the OHAI relay and the Aggregation server collude, then you lose all privacy benefits i.e. the Aggregation server knows which client sent which measurement, and if enough measurements are received, can know which clients had those measurements. \r\n\r\nThis has an impact on deployment. Randomness server and OHAI relay can be the same but this has consequences for collusion risk.",
+      "createdAt": "2022-07-07T00:02:46Z",
+      "updatedAt": "2022-07-11T17:17:49Z",
+      "closedAt": "2022-07-11T17:17:49Z",
+      "comments": []
+    },
+    {
+      "number": 15,
+      "id": "I_kwDOGyWsmM5NfHo-",
+      "title": "Update System Architecture diagram to include randomness server",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/15",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-07-10T19:57:50Z",
+      "updatedAt": "2022-07-11T23:11:31Z",
+      "closedAt": "2022-07-11T23:11:31Z",
+      "comments": [
+        {
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "body": "Fixed by b717a76abb6f20fafdec393292ec38126ac11f82",
+          "createdAt": "2022-07-11T23:11:31Z",
+          "updatedAt": "2022-07-11T23:11:31Z"
+        }
+      ]
+    },
+    {
+      "number": 19,
+      "id": "I_kwDOGyWsmM5Os1xG",
+      "title": "Use traditional Shamir Secret Sharing instead of Adept",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/19",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Using Adept SS makes the security proofs simpler, but for interop ease we should just use regular Shamir Secret Sharing.",
+      "createdAt": "2022-07-28T04:30:39Z",
+      "updatedAt": "2022-09-28T18:02:53Z",
+      "closedAt": "2022-09-28T18:02:53Z",
+      "comments": [
+        {
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We may need robustness to counter the issue raised by Eric Rescorla at the PPM meeting: if a malicious user creates a bad share but we have at least K good shares, then we still want to be able to recover the correct value. Adept secret sharing provides this, but we may be able to get a more efficient alternative using something like: https://www.cwi.nl/system/files/Fehr.pdf",
+          "createdAt": "2022-08-01T08:27:08Z",
+          "updatedAt": "2022-08-01T08:27:08Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "After revisiting the ADSS paper, I'm not sure robustness is the desired property here. Instead, what we want is authenticity, which ADSS does provide. At this point, I think it would make sense to specify the ADSS syntax directly in the spec since we know it provides at least protection against the trivial DoS attack.",
+          "createdAt": "2022-08-01T12:38:51Z",
+          "updatedAt": "2022-08-01T12:38:51Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "This has been done, so the issue can probably be closed @ShivanKaul.",
+          "createdAt": "2022-09-28T16:59:39Z",
+          "updatedAt": "2022-09-28T16:59:39Z"
+        }
+      ]
+    },
+    {
+      "number": 20,
+      "id": "I_kwDOGyWsmM5Os2A8",
+      "title": "Hardcode a specific modulus for Shamir scheme",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/20",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-07-28T04:32:19Z",
+      "updatedAt": "2022-10-06T18:56:43Z",
+      "closedAt": "2022-10-06T18:56:43Z",
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@ShivanKaul this can be closed.",
+          "createdAt": "2022-09-29T15:37:45Z",
+          "updatedAt": "2022-09-29T15:37:45Z"
+        }
+      ]
+    },
+    {
+      "number": 21,
+      "id": "I_kwDOGyWsmM5Os58F",
+      "title": "Use key-committing AEAD for the message encryption ",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/21",
+      "state": "CLOSED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "So that the same ciphertext can't be decrypted to 2 different plaintexts ",
+      "createdAt": "2022-07-28T04:58:38Z",
+      "updatedAt": "2022-10-06T18:56:47Z",
+      "closedAt": "2022-10-06T18:56:47Z",
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@ShivanKaul this can be closed.",
+          "createdAt": "2022-09-29T15:37:52Z",
+          "updatedAt": "2022-09-29T15:37:52Z"
+        }
+      ]
+    },
+    {
+      "number": 22,
+      "id": "I_kwDOGyWsmM5Os7yr",
+      "title": "Garbage reports",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/22",
+      "state": "OPEN",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "What happens when the aggregation server decrypts and discovers that one of the values does not match all the others?\r\n\r\n- throw out whole batch?\r\n- majority vote?\r\n- crossover period in epochs?",
+      "createdAt": "2022-07-28T05:11:10Z",
+      "updatedAt": "2022-11-01T08:59:09Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "NONE",
+          "body": "Throwing out the whole batch leads to a trivial DoS attack so surely not that. \r\n\r\nIf you are still in epoch it seems like you could just submit the candidate values yourself and see which ones produce the right r3, right? Similarly, what if you used a VOPRF and then you could check for a match.\r\n\r\n\r\n\r\n",
+          "createdAt": "2022-09-30T02:28:06Z",
+          "updatedAt": "2022-09-30T02:28:06Z"
+        },
+        {
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "body": "The way we've outlined the protocol right now, the Aggregation Server would only get the values once the epoch has passed. ",
+          "createdAt": "2022-10-01T03:05:44Z",
+          "updatedAt": "2022-10-01T03:05:44Z"
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "id": "I_kwDOGyWsmM5Os78J",
+      "title": "What information is leaked through common tags?",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/23",
+      "state": "OPEN",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "- important to keep key rotations consistent.",
+      "createdAt": "2022-07-28T05:12:11Z",
+      "updatedAt": "2022-10-18T22:27:49Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We should use this issue to discuss leakage that stems from the measurement distribution. I can take a first cut at this.",
+          "createdAt": "2022-10-18T22:27:49Z",
+          "updatedAt": "2022-10-18T22:27:49Z"
+        }
+      ]
+    },
+    {
+      "number": 27,
+      "id": "I_kwDOGyWsmM5S2ibr",
+      "title": "Corrupt reports",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/27",
+      "state": "OPEN",
+      "author": "martinthomson",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "What measures, if any, does STAR have to protect itself from bad submissions from clients.\r\n\r\nAs far as I can tell, if a single client submits a bad report, your only chance of detecting it is if another client submits something at the same x-coordinate.  Then you can just throw both out.  But if k << n for secret sharing, the odds of that happening are very slim.\r\n\r\nThis seems like a very good way to attack a telemetry system and prevent any values from being collected at all.",
+      "createdAt": "2022-09-28T22:49:38Z",
+      "updatedAt": "2022-11-01T09:02:42Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "NONE",
+          "body": "To recap my email at: https://mailarchive.ietf.org/arch/msg/ppm/mW_cY_BGNyamCRsYPoT5YAGROwk/\r\n\r\nThere are several kinds of bad reports, with the problematic one being a bogus secret share that causes the wrong key to be recovered. I believe this will be detectable because the legitimate ciphertexts will not be decryptable. However, then we need an algorithm for discarding the bogus share(s) that is more efficient than trying every possible subset of shares.\r\n\r\n\r\n\r\n\r\n",
+          "createdAt": "2022-09-29T03:12:35Z",
+          "updatedAt": "2022-09-29T03:12:35Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Agreed with the need for an algorithm that doesn't have exponential runtime.",
+          "createdAt": "2022-09-29T15:35:31Z",
+          "updatedAt": "2022-09-29T15:35:37Z"
+        },
+        {
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "body": "Hi folks, we're using https://github.com/ShivanKaul/star-spec/issues/22 to track garbage reports (i.e. invalid ciphertext). I'm going to re-title this issue \"corrupt reports\", (i.e. invalid share), and we think verifiable secret sharing should address this kind of bad report. \r\n\r\nHow does that sound?",
+          "createdAt": "2022-11-01T09:02:21Z",
+          "updatedAt": "2022-11-01T09:02:21Z"
+        }
+      ]
+    },
+    {
+      "number": 31,
+      "id": "I_kwDOGyWsmM5URqkZ",
+      "title": "Specify verifiable secret sharing",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/31",
+      "state": "CLOSED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [
+        "chris-wood"
+      ],
+      "labels": [],
+      "body": "... based on Feldman's scheme. This adds overhead to each report (since they now carry the secret commitment), but it prevents the trivial DoS attack.",
+      "createdAt": "2022-10-18T22:24:14Z",
+      "updatedAt": "2022-10-24T15:27:55Z",
+      "closedAt": "2022-10-24T15:27:55Z",
+      "comments": []
+    },
+    {
+      "number": 32,
+      "id": "I_kwDOGyWsmM5URq7I",
+      "title": "Add discussion about \"garbage reports\"",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/32",
+      "state": "CLOSED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [
+        "chris-wood"
+      ],
+      "labels": [],
+      "body": "A \"garbage report\" is one which has a valid secret share but contains an encryption of a measurement that is different from the value used to derive the secret. This is problematic because the original STAR paper required the aggregation server to _abort_ in the presence of mismatch, which seems like a trivial way to DoS the service. One way to deal with this is to do a majority vote amongst the decrypted measurements, \"confirm\" which measurement is correct (by querying the randomness server), or to use something other than a VOPRF.",
+      "createdAt": "2022-10-18T22:26:08Z",
+      "updatedAt": "2022-10-24T15:27:56Z",
+      "closedAt": "2022-10-24T15:27:56Z",
+      "comments": []
+    },
+    {
+      "number": 33,
+      "id": "I_kwDOGyWsmM5URrEz",
+      "title": "Change Shamir field to align with \"standard\" group scalar fields?",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/33",
+      "state": "CLOSED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [
+        "chris-wood"
+      ],
+      "labels": [],
+      "body": "This lets us re-use HashToScalar implementations rather than rolling a new version. It does come at some performance cost, though.",
+      "createdAt": "2022-10-18T22:26:58Z",
+      "updatedAt": "2022-10-24T15:27:56Z",
+      "closedAt": "2022-10-24T15:27:56Z",
+      "comments": []
+    },
+    {
+      "number": 35,
+      "id": "I_kwDOGyWsmM5UU85K",
+      "title": "Add IANA considerations for new media types",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/35",
+      "state": "CLOSED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-10-19T11:14:55Z",
+      "updatedAt": "2022-10-21T03:47:56Z",
+      "closedAt": "2022-10-21T03:47:56Z",
+      "comments": []
+    },
+    {
+      "number": 37,
+      "id": "I_kwDOGyWsmM5Um9jn",
+      "title": "Merge share and commitment into a single structure",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/37",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Right now, a report consists of the following:\r\n\r\n```\r\nstruct {\r\n  opaque encrypted_report<1..2^16-1>;\r\n  opaque rand_share<1..2^16-1>;\r\n  opaque commitment<1..2^16-1>;\r\n} Report;\r\n```\r\n\r\nThis implies that the commitment is sort of separate from the report share, but in principle these two are intrinsically bound together. The commitment only makes sense for the share, and the share is really only useful with the commitment. \r\n\r\nI propose we make the commitment an explicit part of the share, which would yield a structure like the following:\r\n\r\n```\r\nstruct {\r\n  opaque input[Ns]; // x-coordinate of the share\r\n  opaque output[Ns]; // y-coordinate of the share\r\n  opaque commitment<1..2^16-1>; // scheme-specific commitment\r\n} Share;\r\n\r\nstruct {\r\n  opaque encrypted_report<1..2^16-1>;\r\n  Share share;\r\n} Report;\r\n```\r\n\r\nThis seems to be a much more natural split. Aggregators can still identify shares corresponding to the same secret by simply accessing `Report.share.comitment`, instead of `Report.commitment` as it was previously. \r\n\r\nThis made my implementation with VSS more ergonomic, since now one can immediately verify shares upon deserialization (for applicable secret sharing schemes), rather than defer verification to the aggregation phase. ",
+      "createdAt": "2022-10-22T20:37:43Z",
+      "updatedAt": "2022-10-23T01:26:04Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
+  "pulls": [
+    {
+      "number": 12,
+      "id": "PR_kwDOGyWsmM47Ba1p",
+      "title": "Add text that states VOPRFs can be used",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/12",
+      "state": "MERGED",
+      "author": "alxdavids",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #7: adds text that states that VOPRFs can be used as well as partially oblivious PRFs. Puncturable POPRFs are no longer mentioned. We should leave POPRFs in as an option as they are easier to use than VOPRFs, especially in situations where we expect that the risk of the aggregation server stealing the randomness server key at any point is low.",
+      "createdAt": "2022-07-07T13:19:16Z",
+      "updatedAt": "2022-07-08T09:07:13Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "a7b4e55b032a06208001e1e19222796e15e9e3a4",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "use-voprf",
+      "headRefOid": "22d0c840af6ce6c867c3d2dd386b185fab72c22b",
+      "closedAt": "2022-07-08T09:07:13Z",
+      "mergedAt": "2022-07-08T09:07:12Z",
+      "mergedBy": "alxdavids",
+      "mergeCommit": {
+        "oid": "9ddb2a5d54bb91b738b1e70725039b13b8b3285f"
+      },
+      "comments": [
+        {
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "body": "> For further security enhancements, clients MAY sample their randomness in epoch `t` and then send it to the aggregation server in `t+1`\r\n\r\nI'm wondering if we should change this to a SHOULD, actually, now that we don't have puncturable POPRFs.",
+          "createdAt": "2022-07-07T19:13:42Z",
+          "updatedAt": "2022-07-07T19:13:42Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM49g9cK",
+          "commit": {
+            "abbreviatedOid": "55f9d7f"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-07-07T19:12:39Z",
+          "updatedAt": "2022-07-07T19:12:39Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "id": "PR_kwDOGyWsmM47BegB",
+      "title": "Add auxiliary data clarification and comparison",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/13",
+      "state": "MERGED",
+      "author": "alxdavids",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- fixes #4\r\n- fixes #9",
+      "createdAt": "2022-07-07T13:29:20Z",
+      "updatedAt": "2022-07-08T09:02:13Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "a7b4e55b032a06208001e1e19222796e15e9e3a4",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "aux-data",
+      "headRefOid": "676fc0f0899768f4fce452ee060495e4a17c9619",
+      "closedAt": "2022-07-08T09:02:12Z",
+      "mergedAt": "2022-07-08T09:02:12Z",
+      "mergedBy": "alxdavids",
+      "mergeCommit": {
+        "oid": "2ebc32e8291dcecd5ebc4b56a448ae0f8deccea3"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM49g91a",
+          "commit": {
+            "abbreviatedOid": "676fc0f"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-07-07T19:14:16Z",
+          "updatedAt": "2022-07-07T19:14:16Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "id": "PR_kwDOGyWsmM47Bi1K",
+      "title": "Add more details on leakage",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/14",
+      "state": "MERGED",
+      "author": "alxdavids",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #8, includes a comparison with leakage in Prio and Poplar.",
+      "createdAt": "2022-07-07T13:41:08Z",
+      "updatedAt": "2022-07-11T09:43:34Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "9ddb2a5d54bb91b738b1e70725039b13b8b3285f",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "leakage-comparison",
+      "headRefOid": "01ce65265e325b23b204c47253e8701068ccbb47",
+      "closedAt": "2022-07-11T09:43:34Z",
+      "mergedAt": "2022-07-11T09:43:34Z",
+      "mergedBy": "alxdavids",
+      "mergeCommit": {
+        "oid": "66b7330397d936df737f86551a76a64f3ec7d180"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM49g-UG",
+          "commit": {
+            "abbreviatedOid": "2efe518"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-07-07T19:16:12Z",
+          "updatedAt": "2022-07-07T19:16:13Z",
+          "comments": [
+            {
+              "originalPosition": 16,
+              "body": "> However, it may still be possible to use this leakage to reduce a client's privacy, and so care should be taken to not construct situations where counts of measurement subsets are not likely to lead to deanonymization of clients or their data.\r\n\r\nIsn't there one \"not\" too many here?",
+              "createdAt": "2022-07-07T19:16:12Z",
+              "updatedAt": "2022-07-07T19:16:13Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM49jJFz",
+          "commit": {
+            "abbreviatedOid": "2efe518"
+          },
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-07-08T09:09:02Z",
+          "updatedAt": "2022-07-08T09:09:02Z",
+          "comments": [
+            {
+              "originalPosition": 16,
+              "body": "Good spot, fixed!",
+              "createdAt": "2022-07-08T09:09:02Z",
+              "updatedAt": "2022-07-08T09:09:02Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM49nIjw",
+          "commit": {
+            "abbreviatedOid": "01ce652"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-07-10T19:03:47Z",
+          "updatedAt": "2022-07-10T19:03:47Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "id": "PR_kwDOGyWsmM47Lqo0",
+      "title": "Be more prescriptive about OHTTP usage.",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/16",
+      "state": "MERGED",
+      "author": "alxdavids",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #1 ",
+      "createdAt": "2022-07-11T10:12:55Z",
+      "updatedAt": "2022-07-11T17:20:08Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "6f18d09bacd578eb0bce75aabee4b6f9c365c2c9",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "ohttp-tor",
+      "headRefOid": "73cfe2c6b80b7052329731e7a280814a0dffd3b5",
+      "closedAt": "2022-07-11T17:20:08Z",
+      "mergedAt": "2022-07-11T17:20:07Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "cd12d986b60716b754e863e1143d41582730fcca"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM49rA1s",
+          "commit": {
+            "abbreviatedOid": "d474698"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-07-11T17:18:29Z",
+          "updatedAt": "2022-07-11T17:18:29Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 17,
+      "id": "PR_kwDOGyWsmM47Lq98",
+      "title": "Adds details to dictionary attacks based on leakage",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/17",
+      "state": "MERGED",
+      "author": "alxdavids",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #11: \r\n- Discuss dictionary attacks in more depth\r\n- Provide comparison with Prio and Poplar\r\n\r\nFixes #3: Discuss fallback security model under collusion",
+      "createdAt": "2022-07-11T10:14:14Z",
+      "updatedAt": "2022-07-11T17:17:49Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "66b7330397d936df737f86551a76a64f3ec7d180",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "dict-attack",
+      "headRefOid": "5324d9f72732779691ecc5b4f8b6d3527bfd107c",
+      "closedAt": "2022-07-11T17:17:49Z",
+      "mergedAt": "2022-07-11T17:17:49Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "16b33c13f6d92cbb15c7340c384e7e13fd2a3506"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM49rAfv",
+          "commit": {
+            "abbreviatedOid": "5324d9f"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-07-11T17:17:14Z",
+          "updatedAt": "2022-07-11T17:17:14Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 18,
+      "id": "PR_kwDOGyWsmM47LvDX",
+      "title": "Clarify consequences of single aggregation server",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/18",
+      "state": "MERGED",
+      "author": "alxdavids",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Fixes #5: clarifies randomness as the output of an OPRF\r\n- Fixes #10: more explicit advantages of only requiring a single aggregation server\r\n- Also removed old text saying that randomness could be derived locally",
+      "createdAt": "2022-07-11T10:30:47Z",
+      "updatedAt": "2022-07-11T17:18:14Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "66b7330397d936df737f86551a76a64f3ec7d180",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "single-agg-server",
+      "headRefOid": "a593eb3494f0e30c171f0f1e6a91e8ea0153f020",
+      "closedAt": "2022-07-11T17:18:14Z",
+      "mergedAt": "2022-07-11T17:18:14Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "6f18d09bacd578eb0bce75aabee4b6f9c365c2c9"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM49rAvf",
+          "commit": {
+            "abbreviatedOid": "a593eb3"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-07-11T17:18:09Z",
+          "updatedAt": "2022-07-11T17:18:09Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 24,
+      "id": "PR_kwDOGyWsmM49Wfex",
+      "title": "Refactor the spec",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/24",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Starting as a draft while we work through details. This seems more implementable than what was there previously. I still need to add a section that selects the algorithms to use for each primitive, e.g., how do we actually implement the TSS scheme? What key-committing AEAD scheme should we use? But this should be a step in the right direction.",
+      "createdAt": "2022-08-17T21:08:50Z",
+      "updatedAt": "2022-09-07T13:26:09Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "afbd63d689ec804a2fbdf7ed274958a33e6c7c2c",
+      "headRepository": "chris-wood/star-spec",
+      "headRefName": "caw/refactor",
+      "headRefOid": "d1213df6bc6e84d59ead443a249199d702c97b89",
+      "closedAt": "2022-09-07T13:26:09Z",
+      "mergedAt": "2022-09-07T13:26:09Z",
+      "mergedBy": "alxdavids",
+      "mergeCommit": {
+        "oid": "1322a74c919e1ae6aefca9a67731fc6ad7732be9"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5AP9c8",
+          "commit": {
+            "abbreviatedOid": "c2e48b9"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T20:03:13Z",
+          "updatedAt": "2022-08-18T20:45:04Z",
+          "comments": [
+            {
+              "originalPosition": 47,
+              "body": "This looks good to me - is it common to have this kind of section in protocol documents that deal with crypto primitives?",
+              "createdAt": "2022-08-18T20:03:13Z",
+              "updatedAt": "2022-08-18T20:45:04Z"
+            },
+            {
+              "originalPosition": 158,
+              "body": "```suggestion\r\nEach client report is as secret as the underlying client data. That means low\r\n```",
+              "createdAt": "2022-08-18T20:06:02Z",
+              "updatedAt": "2022-08-18T20:45:04Z"
+            },
+            {
+              "originalPosition": 161,
+              "body": "```suggestion\r\nreports. To mitigate this, clients boost the entropy of their data using output from an Oblivious\r\n```",
+              "createdAt": "2022-08-18T20:06:48Z",
+              "updatedAt": "2022-08-18T20:45:04Z"
+            },
+            {
+              "originalPosition": 165,
+              "body": "```suggestion\r\nSTAR also requires use of a client Anonymizing Proxy when interacting with the Aggregation\r\n```",
+              "createdAt": "2022-08-18T20:07:43Z",
+              "updatedAt": "2022-08-18T20:45:04Z"
+            },
+            {
+              "originalPosition": 165,
+              "body": "I see that DAP also uses this term: https://www.ietf.org/archive/id/draft-ietf-ppm-dap-01.html#name-anonymizing-proxies",
+              "createdAt": "2022-08-18T20:07:55Z",
+              "updatedAt": "2022-08-18T20:45:04Z"
+            },
+            {
+              "originalPosition": 231,
+              "body": "```suggestion\r\n         |                  |    Proxy    |                    |\r\n```",
+              "createdAt": "2022-08-18T20:33:17Z",
+              "updatedAt": "2022-08-18T20:45:04Z"
+            },
+            {
+              "originalPosition": 400,
+              "body": "I think we could mention something like \"If we use OHTTP\", but this seems like we're requiring OHTTP.",
+              "createdAt": "2022-08-18T20:35:22Z",
+              "updatedAt": "2022-08-18T20:45:04Z"
+            },
+            {
+              "originalPosition": 402,
+              "body": "same here re: use of OHTTP",
+              "createdAt": "2022-08-18T20:35:41Z",
+              "updatedAt": "2022-08-18T20:45:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5AQOsW",
+          "commit": {
+            "abbreviatedOid": "c2e48b9"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T20:54:48Z",
+          "updatedAt": "2022-08-18T20:54:49Z",
+          "comments": [
+            {
+              "originalPosition": 546,
+              "body": "```suggestion\r\nkey that was used in epoch `t-1` can be safely deleted. As discussed in {{leakage}}, shorter\r\nepochs provide more protection from Aggregation Server attacks, but also reduce the window in which data collection occurs (and hence reduce the possibility that we will have enough reports to decrypt) while increasing the reporting latency.\r\n```",
+              "createdAt": "2022-08-18T20:54:48Z",
+              "updatedAt": "2022-08-18T20:55:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5AdYWd",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-23T04:23:10Z",
+          "updatedAt": "2022-08-23T04:23:10Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5AmnWa",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "Some comments, thanks @chris-wood, it's looking like a big improvement from an implementer's perspective so far.",
+          "createdAt": "2022-08-24T13:56:08Z",
+          "updatedAt": "2022-08-24T14:16:36Z",
+          "comments": [
+            {
+              "originalPosition": 425,
+              "body": "When I run `make`, I get an error for the ref `{{randomness-configuration}}` as it doesn't seem to exist.",
+              "createdAt": "2022-08-24T13:56:08Z",
+              "updatedAt": "2022-08-24T14:16:36Z"
+            },
+            {
+              "originalPosition": 106,
+              "body": "Is the idea here to specify a standard secret-sharing scheme first, and then a _robust_ scheme afterwards? I was wondering if we could just go straight for robustness, which will allow us to relax authenticity below if `k` shares are provided that are valid in a group of `k + t` for some small values of `t`.",
+              "createdAt": "2022-08-24T14:00:55Z",
+              "updatedAt": "2022-08-24T14:16:36Z"
+            },
+            {
+              "originalPosition": 95,
+              "body": "Do we need to use double quotations for all of the cryptographic material in this section. For example when compiling the following:\r\n```\r\n- `Seal(key, nonce, aad, pt)`: Encrypt and authenticate plaintext\r\n  `pt` with associated data `aad` using symmetric key `key` and nonce\r\n  `nonce`, yielding ciphertext and tag `ct`.\r\n```\r\nit looks like this in the .txt file:\r\n```\r\n   *  Seal(key, nonce, aad, pt): Encrypt and authenticate plaintext pt\r\n      with associated data aad using symmetric key key and nonce nonce,\r\n      yielding ciphertext and tag ct.\r\n```\r\nWhich doesn't seem super clear?",
+              "createdAt": "2022-08-24T14:05:10Z",
+              "updatedAt": "2022-08-24T14:16:36Z"
+            },
+            {
+              "originalPosition": 180,
+              "body": "This seems like it is going to get confusing, because auxiliary data support is explicitly provided in STAR, but the auxiliary data here is referring to additional data that can be included separately with the AEAD encryption process. It looks like you are suggesting that the auxiliary data is appended using the AEAD additional data functionality, rather than within the encrypted ciphertext as it is in the STAR paper, is that correct?",
+              "createdAt": "2022-08-24T14:06:42Z",
+              "updatedAt": "2022-08-24T14:16:36Z"
+            },
+            {
+              "originalPosition": 583,
+              "body": "Is this referring to if a client encrypts a different plaintext than the one used to create the share? If so, how would a KCAEAD help?",
+              "createdAt": "2022-08-24T14:11:54Z",
+              "updatedAt": "2022-08-24T14:16:36Z"
+            },
+            {
+              "originalPosition": 517,
+              "body": "This is one of the advantages of using a VOPRF, they can check that the correct key is being used for the time period.",
+              "createdAt": "2022-08-24T14:13:10Z",
+              "updatedAt": "2022-08-24T14:16:36Z"
+            },
+            {
+              "originalPosition": 561,
+              "body": "I think robust secret-sharing solves this, e.g. https://www.cwi.nl/system/files/Fehr.pdf.",
+              "createdAt": "2022-08-24T14:14:06Z",
+              "updatedAt": "2022-08-24T14:16:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5Am2uC",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T14:31:29Z",
+          "updatedAt": "2022-08-24T14:31:30Z",
+          "comments": [
+            {
+              "originalPosition": 517,
+              "body": "That would be a good thing to add. ",
+              "createdAt": "2022-08-24T14:31:29Z",
+              "updatedAt": "2022-08-24T14:31:30Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5A2mEo",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T04:33:52Z",
+          "updatedAt": "2022-08-29T04:33:52Z",
+          "comments": [
+            {
+              "originalPosition": 180,
+              "body": "No, thats not the intent. This is just defining the syntax of an AEAD, which explicitly includes additional data.",
+              "createdAt": "2022-08-29T04:33:52Z",
+              "updatedAt": "2022-08-29T04:33:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5A2mXl",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T04:36:32Z",
+          "updatedAt": "2022-08-29T04:36:33Z",
+          "comments": [
+            {
+              "originalPosition": 583,
+              "body": "A KCAEAD ensures that a given ciphertext can't decrypt to two different plaintexts under two different keys. So if the attacker can somehow force the server to use either of these keys, the server can't figure out which plaintext was correct. (This is somewhat tied to the secret sharing scheme.)",
+              "createdAt": "2022-08-29T04:36:32Z",
+              "updatedAt": "2022-08-29T04:36:33Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5A2mZP",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T04:36:45Z",
+          "updatedAt": "2022-08-29T04:36:46Z",
+          "comments": [
+            {
+              "originalPosition": 517,
+              "body": "Let's do so in a followup PR.",
+              "createdAt": "2022-08-29T04:36:45Z",
+              "updatedAt": "2022-08-29T04:36:46Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5A2mhr",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T04:37:48Z",
+          "updatedAt": "2022-08-29T04:37:49Z",
+          "comments": [
+            {
+              "originalPosition": 95,
+              "body": "How is it not clear?",
+              "createdAt": "2022-08-29T04:37:49Z",
+              "updatedAt": "2022-08-29T04:37:49Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5A2mjw",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T04:38:04Z",
+          "updatedAt": "2022-08-29T04:38:05Z",
+          "comments": [
+            {
+              "originalPosition": 425,
+              "body": "Fixed.",
+              "createdAt": "2022-08-29T04:38:04Z",
+              "updatedAt": "2022-08-29T04:38:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5A2mp2",
+          "commit": {
+            "abbreviatedOid": "b5870cb"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T04:38:54Z",
+          "updatedAt": "2022-08-29T04:38:55Z",
+          "comments": [
+            {
+              "originalPosition": 106,
+              "body": "We should define whatever scheme we need in this section. FWIW, I'm not sure we definitely need a robust scheme for all applications, but I'll leave it to y'all to sort out. ",
+              "createdAt": "2022-08-29T04:38:55Z",
+              "updatedAt": "2022-08-29T04:38:55Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 25,
+      "id": "PR_kwDOGyWsmM4_VpuX",
+      "title": "Specify secret-sharing scheme",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/25",
+      "state": "MERGED",
+      "author": "alxdavids",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Defines secret-sharing functions\r\n- Do we need some extra explaining of finite field choice, and also how operations are performed?\r\n- Requires specifying implementation of how reports are constructed using secret sharing scheme",
+      "createdAt": "2022-09-21T10:10:45Z",
+      "updatedAt": "2022-09-27T21:39:16Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "67c492841f8c6427a46b1797637a665660cfda12",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "alxdavids/secret-sharing",
+      "headRefOid": "1f5b1a711100a99a5ff340b78b07072eb2c96db4",
+      "closedAt": "2022-09-27T21:39:15Z",
+      "mergedAt": "2022-09-27T21:39:15Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "431f5e6a727fb2da249e39f55e9d744ad885bde7"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5CehCB",
+          "commit": {
+            "abbreviatedOid": "0fbd62b"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "",
+          "createdAt": "2022-09-21T12:05:26Z",
+          "updatedAt": "2022-09-21T12:08:14Z",
+          "comments": [
+            {
+              "originalPosition": 25,
+              "body": "```suggestion\r\n- Share(k, msg, rand): Produce a k-threshold share of the secret\r\n```\r\nThis signature doesn't match the function description below. I also don't know what the best way to describe this \"thing\" is, as we don't need to describe the number of points at which to evaluate the polynomial (n). I went with \"k-threshold share,\" but there's probably something better.",
+              "createdAt": "2022-09-21T12:05:26Z",
+              "updatedAt": "2022-09-21T12:08:14Z"
+            },
+            {
+              "originalPosition": 27,
+              "body": "```suggestion\r\n  `x` using randomness `rand`. The value k is an integer, and `msg` and `rand` are byte strings.\r\n```",
+              "createdAt": "2022-09-21T12:05:42Z",
+              "updatedAt": "2022-09-21T12:08:14Z"
+            },
+            {
+              "originalPosition": 28,
+              "body": "```suggestion\r\n- Recover(k, share_set): Combine the secret shares in `share_set`, which is of size at\r\n```",
+              "createdAt": "2022-09-21T12:05:58Z",
+              "updatedAt": "2022-09-21T12:08:14Z"
+            },
+            {
+              "originalPosition": 38,
+              "body": "```suggestion\r\nSSS is unconditionally secure, and thus the size of the field is not\r\n```",
+              "createdAt": "2022-09-21T12:06:19Z",
+              "updatedAt": "2022-09-21T12:08:14Z"
+            },
+            {
+              "originalPosition": 41,
+              "body": "We need to actually pick a prime to make this interoperable. ",
+              "createdAt": "2022-09-21T12:06:50Z",
+              "updatedAt": "2022-09-21T12:08:14Z"
+            },
+            {
+              "originalPosition": 59,
+              "body": "If we're going to use `polynomial_interpolation` from FROST, can we also just use `polynomial_evaluate` to evaluate the polynomial over a random point (`r`)?",
+              "createdAt": "2022-09-21T12:08:12Z",
+              "updatedAt": "2022-09-21T12:08:14Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5C2TVS",
+          "commit": {
+            "abbreviatedOid": "0fbd62b"
+          },
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-27T08:31:52Z",
+          "updatedAt": "2022-09-27T08:31:52Z",
+          "comments": [
+            {
+              "originalPosition": 25,
+              "body": "`k-threshold` seems fine to me",
+              "createdAt": "2022-09-27T08:31:52Z",
+              "updatedAt": "2022-09-27T08:31:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5C3Nxn",
+          "commit": {
+            "abbreviatedOid": "1f5b1a7"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-09-27T11:05:54Z",
+          "updatedAt": "2022-09-27T11:05:54Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 26,
+      "id": "PR_kwDOGyWsmM4_y685",
+      "title": "Fix block styling",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/26",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "cc @ShivanKaul ",
+      "createdAt": "2022-09-28T16:59:09Z",
+      "updatedAt": "2022-09-28T17:53:00Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "431f5e6a727fb2da249e39f55e9d744ad885bde7",
+      "headRepository": "chris-wood/star-spec",
+      "headRefName": "caw/format-fix",
+      "headRefOid": "74fd2b355861dc2a5f241db28def9366d925d20f",
+      "closedAt": "2022-09-28T17:53:00Z",
+      "mergedAt": "2022-09-28T17:53:00Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "7e31ac062bd9d1e369c0a28717237330ceebe598"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 28,
+      "id": "PR_kwDOGyWsmM4_3WCX",
+      "title": "Frame the report_data plaintext so it can be parsed",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/28",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-09-29T15:00:11Z",
+      "updatedAt": "2022-09-29T15:08:32Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "7e31ac062bd9d1e369c0a28717237330ceebe598",
+      "headRepository": "chris-wood/star-spec",
+      "headRefName": "caw/frame-report-data",
+      "headRefOid": "5853bb9f936c61edeb1b2826e6ecd63fdff9467d",
+      "closedAt": "2022-09-29T15:08:32Z",
+      "mergedAt": "2022-09-29T15:08:32Z",
+      "mergedBy": "alxdavids",
+      "mergeCommit": {
+        "oid": "ed63709b74f3e818ad8f406c6373678555a2d3a3"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5DFaF_",
+          "commit": {
+            "abbreviatedOid": "5853bb9"
+          },
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-09-29T15:08:14Z",
+          "updatedAt": "2022-09-29T15:08:14Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 29,
+      "id": "PR_kwDOGyWsmM4_3Z8J",
+      "title": "Use a VOPRF",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/29",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-09-29T15:12:15Z",
+      "updatedAt": "2022-10-03T17:37:06Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "ed63709b74f3e818ad8f406c6373678555a2d3a3",
+      "headRepository": "chris-wood/star-spec",
+      "headRefName": "caw/use-voprf",
+      "headRefOid": "4e96859c56a12a5a8196e6b1768fc260b04644dc",
+      "closedAt": "2022-10-03T17:28:07Z",
+      "mergedAt": "2022-10-03T17:28:07Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "582ca149eea3590cf9917b3136df766f279268af"
+      },
+      "comments": [
+        {
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "body": "lgtm, discussed with Alex as well",
+          "createdAt": "2022-10-03T17:28:01Z",
+          "updatedAt": "2022-10-03T17:28:01Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5DR7_T",
+          "commit": {
+            "abbreviatedOid": "4e96859"
+          },
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-10-03T17:37:06Z",
+          "updatedAt": "2022-10-03T17:37:06Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 30,
+      "id": "PR_kwDOGyWsmM5A7nvx",
+      "title": "Make commitments a part of the secret sharing syntax",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/30",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-10-17T13:38:57Z",
+      "updatedAt": "2022-10-18T21:56:27Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "582ca149eea3590cf9917b3136df766f279268af",
+      "headRepository": "chris-wood/star-spec",
+      "headRefName": "caw/share-commitments",
+      "headRefOid": "66aa6ba2f8f3a4e83f63c0e384577fbfad70ab78",
+      "closedAt": "2022-10-18T21:56:26Z",
+      "mergedAt": "2022-10-18T21:56:26Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "32f97a0363b22b94ed40ab493847f2876eaed48f"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5ENMwq",
+          "commit": {
+            "abbreviatedOid": "04be3c7"
+          },
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-10-17T14:51:13Z",
+          "updatedAt": "2022-10-17T14:51:13Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5EVLIP",
+          "commit": {
+            "abbreviatedOid": "04be3c7"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-10-18T19:30:44Z",
+          "updatedAt": "2022-10-18T19:30:45Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "```suggestion\r\n- Share(k, secret, rand): Produce a `k`-threshold share using randomness `rand` and `secret`,\r\n```",
+              "createdAt": "2022-10-18T19:30:45Z",
+              "updatedAt": "2022-10-18T19:33:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5EVMGI",
+          "commit": {
+            "abbreviatedOid": "04be3c7"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-10-18T19:34:09Z",
+          "updatedAt": "2022-10-18T19:34:10Z",
+          "comments": [
+            {
+              "originalPosition": 11,
+              "body": "```suggestion\r\n  The value `k` is an integer, and `secret`  and `rand` are byte strings.\r\n```",
+              "createdAt": "2022-10-18T19:34:09Z",
+              "updatedAt": "2022-10-18T19:34:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5EVMKG",
+          "commit": {
+            "abbreviatedOid": "04be3c7"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-10-18T19:34:22Z",
+          "updatedAt": "2022-10-18T19:34:22Z",
+          "comments": [
+            {
+              "originalPosition": 13,
+              "body": "```suggestion\r\n  to the same secret share commitment, which is of size at least `k`, and recover the corresponding\r\n```",
+              "createdAt": "2022-10-18T19:34:22Z",
+              "updatedAt": "2022-10-18T19:34:22Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5EVMR1",
+          "commit": {
+            "abbreviatedOid": "04be3c7"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-10-18T19:34:46Z",
+          "updatedAt": "2022-10-18T19:34:46Z",
+          "comments": [
+            {
+              "originalPosition": 14,
+              "body": "```suggestion\r\n  message `secret`. If recovery fails, this function returns an error.\r\n```",
+              "createdAt": "2022-10-18T19:34:46Z",
+              "updatedAt": "2022-10-18T19:34:46Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 34,
+      "id": "PR_kwDOGyWsmM5BGRXg",
+      "title": "Specify Feldman's VSS scheme",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/34",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #31\r\nCloses #32 \r\nCloses #33",
+      "createdAt": "2022-10-19T11:08:06Z",
+      "updatedAt": "2022-10-24T15:27:55Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "32f97a0363b22b94ed40ab493847f2876eaed48f",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "caw/vss",
+      "headRefOid": "3622b37232c79490ee5b5d3db25691fd64e028e4",
+      "closedAt": "2022-10-24T15:27:55Z",
+      "mergedAt": "2022-10-24T15:27:55Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "3929ba8310f302f5e75ded6a7646328fb8c9d488"
+      },
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We could crib the POG stuff from an existing document, but I've inlined it here just to get us started.",
+          "createdAt": "2022-10-19T11:08:28Z",
+          "updatedAt": "2022-10-19T11:08:28Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5ErHXu",
+          "commit": {
+            "abbreviatedOid": "3622b37"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-10-22T21:44:42Z",
+          "updatedAt": "2022-10-22T21:44:42Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 36,
+      "id": "PR_kwDOGyWsmM5BGTW-",
+      "title": "IANA considerations",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/36",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #35",
+      "createdAt": "2022-10-19T11:15:10Z",
+      "updatedAt": "2022-10-21T03:47:46Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "caw/vss",
+      "baseRefOid": "c59f5aa7449f360045ac4414b885e7f6841a3821",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "caw/iana-considerations",
+      "headRefOid": "821176d206216637efb3ca2cd0cf36d61e819ae3",
+      "closedAt": "2022-10-21T03:47:46Z",
+      "mergedAt": "2022-10-21T03:47:46Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "3622b37232c79490ee5b5d3db25691fd64e028e4"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 38,
+      "id": "PR_kwDOGyWsmM5B8zjF",
+      "title": "Miscellaneous fixes",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/38",
+      "state": "MERGED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "- VSS `Commit` takes `poly`, not `secret`\r\n- Discuss DoS attack\r\n- terminology fixes\r\n- Remove unused reference",
+      "createdAt": "2022-11-01T09:12:33Z",
+      "updatedAt": "2022-11-01T22:03:52Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "a88228bd801da9c6f85b96ad04907e02cc54b35a",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "misc-fixes",
+      "headRefOid": "fd3eb4df5432294487d87c8f911298eb3e9f1306",
+      "closedAt": "2022-11-01T22:03:52Z",
+      "mergedAt": "2022-11-01T22:03:52Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "05a509ceff6b89ecf741fb49e22f2875eb914a74"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5FVYBT",
+          "commit": {
+            "abbreviatedOid": "fd3eb4d"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-11-01T12:08:37Z",
+          "updatedAt": "2022-11-01T12:08:40Z",
+          "comments": [
+            {
+              "originalPosition": 210,
+              "body": "This is a good clarification, but it comes across as somewhat unspecified behavior. As an implementer, do I need to use a VSS scheme? And if so, how do I negotiate it? (I think these are configured things.) I have an idea for how to address this that I can send in a followup PR.",
+              "createdAt": "2022-11-01T12:08:37Z",
+              "updatedAt": "2022-11-01T12:08:40Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 39,
+      "id": "PR_kwDOGyWsmM5D16be",
+      "title": "Adopt TSS draft",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/39",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@ShivanKaul @alxdavids this is a proposed change based on [this split out draft](https://chris-wood.github.io/draft-wood-cfrg-threshold-secret-sharing/draft-wood-cfrg-threshold-secret-sharing.html#name-authenticated-threshold-secr). It does simplify things, and needs some work, but the gist is there.",
+      "createdAt": "2022-11-28T22:42:55Z",
+      "updatedAt": "2023-02-14T00:51:53Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "785921ace5ed6f0dd082832868283ea5c71c8372",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "caw/offload-tss",
+      "headRefOid": "be4ef525219331087afa9428c68e12d93b33249f",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5HYc0W",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "alxdavids",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "LGTM!",
+          "createdAt": "2022-11-29T13:49:42Z",
+          "updatedAt": "2022-11-29T13:49:42Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5HdDRO",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-11-30T07:22:55Z",
+          "updatedAt": "2022-11-30T07:22:55Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NRd2c",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-13T20:54:41Z",
+          "updatedAt": "2023-02-13T21:03:06Z",
+          "comments": [
+            {
+              "originalPosition": 206,
+              "body": "Share?",
+              "createdAt": "2023-02-13T20:54:41Z",
+              "updatedAt": "2023-02-13T21:03:06Z"
+            },
+            {
+              "originalPosition": 210,
+              "body": "This is only true for VSS, not regular STAR right? For regular STAR we just use Basic TSS.",
+              "createdAt": "2023-02-13T21:00:33Z",
+              "updatedAt": "2023-02-13T21:03:06Z"
+            },
+            {
+              "originalPosition": 221,
+              "body": "Hmm, idly wondering if the randomness generation should also be a pluggable thing i.e. it could be an OPRF or a VOPRF or just nothing at all. Probably not useful though. ",
+              "createdAt": "2023-02-13T21:02:41Z",
+              "updatedAt": "2023-02-13T21:03:07Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NSZgj",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-14T00:45:22Z",
+          "updatedAt": "2023-02-14T00:45:22Z",
+          "comments": [
+            {
+              "originalPosition": 206,
+              "body": "Can you elaborate on this comment?",
+              "createdAt": "2023-02-14T00:45:22Z",
+              "updatedAt": "2023-02-14T00:45:22Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NSZkP",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-14T00:45:41Z",
+          "updatedAt": "2023-02-14T00:45:42Z",
+          "comments": [
+            {
+              "originalPosition": 210,
+              "body": "This PR forces use of VSS. It would need to be updated to allow just plain TSS.",
+              "createdAt": "2023-02-14T00:45:42Z",
+              "updatedAt": "2023-02-14T00:45:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NSZoH",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-14T00:46:05Z",
+          "updatedAt": "2023-02-14T00:46:05Z",
+          "comments": [
+            {
+              "originalPosition": 221,
+              "body": "Yeah, that's how I chose to implement it.",
+              "createdAt": "2023-02-14T00:46:05Z",
+              "updatedAt": "2023-02-14T00:46:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NSaTj",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-14T00:50:33Z",
+          "updatedAt": "2023-02-14T00:50:34Z",
+          "comments": [
+            {
+              "originalPosition": 206,
+              "body": "I see `RandomShare` defined, but not `Share`. ",
+              "createdAt": "2023-02-14T00:50:33Z",
+              "updatedAt": "2023-02-14T00:50:34Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NSadV",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-14T00:51:28Z",
+          "updatedAt": "2023-02-14T00:51:29Z",
+          "comments": [
+            {
+              "originalPosition": 206,
+              "body": "```suggestion\r\n  output from RandomShare.\r\n```",
+              "createdAt": "2023-02-14T00:51:29Z",
+              "updatedAt": "2023-02-14T00:51:29Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NSah4",
+          "commit": {
+            "abbreviatedOid": "ae0992e"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-14T00:51:53Z",
+          "updatedAt": "2023-02-14T00:51:53Z",
+          "comments": [
+            {
+              "originalPosition": 210,
+              "body": "I think it would be good to keep STAR generic and allow using Basic TSS as well. ",
+              "createdAt": "2023-02-14T00:51:53Z",
+              "updatedAt": "2023-02-14T00:51:53Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 40,
+      "id": "PR_kwDOGyWsmM5GvG49",
+      "title": "Experimental status",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/40",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Move to experimental instead of standards track.",
+      "createdAt": "2023-01-05T16:28:04Z",
+      "updatedAt": "2023-01-05T16:28:04Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "785921ace5ed6f0dd082832868283ea5c71c8372",
+      "headRepository": "chris-wood/star-spec",
+      "headRefName": "caw/experimental",
+      "headRefOid": "89866a5edb0d7f7052261f9b7e8df93108a60eb9",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 41,
+      "id": "PR_kwDOGyWsmM5Ji-Fj",
+      "title": "Describe attack where AS can detect presence of specific measurements",
+      "url": "https://github.com/ShivanKaul/star-spec/pull/41",
+      "state": "MERGED",
+      "author": "ShivanKaul",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2023-02-08T17:22:21Z",
+      "updatedAt": "2023-02-14T00:49:59Z",
+      "baseRepository": "ShivanKaul/star-spec",
+      "baseRefName": "main",
+      "baseRefOid": "785921ace5ed6f0dd082832868283ea5c71c8372",
+      "headRepository": "ShivanKaul/star-spec",
+      "headRefName": "detecting-specific-measurements-attack",
+      "headRefOid": "5e660eb9b3d615e5050e848ae627713172c66161",
+      "closedAt": "2023-02-14T00:49:59Z",
+      "mergedAt": "2023-02-14T00:49:59Z",
+      "mergedBy": "ShivanKaul",
+      "mergeCommit": {
+        "oid": "856ec016a93c755510758e617ac288ad9310c45f"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOGyWsmM5M5B-f",
+          "commit": {
+            "abbreviatedOid": "9a1b266"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-08T21:21:06Z",
+          "updatedAt": "2023-02-08T21:21:07Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "I'm not really sure I understand what this PR is trying to do. This _is_ a dictionary attack. Why is it being called out as something separate?",
+              "createdAt": "2023-02-08T21:21:06Z",
+              "updatedAt": "2023-02-08T21:21:07Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5M5HBz",
+          "commit": {
+            "abbreviatedOid": "9a1b266"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-08T21:38:27Z",
+          "updatedAt": "2023-02-08T21:38:27Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "That was my initial reaction to Watson's email as well, but I think it's slightly different in the sense that the server doesn't necessarily need to launch multiple queries, even just one would be sufficient for detecting if the measurement you're looking for is in the set. So you're not trying out multiple words as in a dictionary attack. It's a small clarification, if we don't think it's worth mentioning I'm happy to close. ",
+              "createdAt": "2023-02-08T21:38:27Z",
+              "updatedAt": "2023-02-08T21:38:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5M87bz",
+          "commit": {
+            "abbreviatedOid": "9a1b266"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-09T12:26:50Z",
+          "updatedAt": "2023-02-09T12:26:51Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "Yeah, I think we ought to close, or at least merge this discussion into the earlier section on dictionary attacks.",
+              "createdAt": "2023-02-09T12:26:51Z",
+              "updatedAt": "2023-02-09T12:26:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NSKzI",
+          "commit": {
+            "abbreviatedOid": "9a1b266"
+          },
+          "author": "ShivanKaul",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-02-13T23:38:39Z",
+          "updatedAt": "2023-02-13T23:38:39Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "Merged discussion into Dictionary Attack section, looks better now IMO.",
+              "createdAt": "2023-02-13T23:38:39Z",
+              "updatedAt": "2023-02-13T23:38:39Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOGyWsmM5NSZQo",
+          "commit": {
+            "abbreviatedOid": "5e660eb"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-02-14T00:43:45Z",
+          "updatedAt": "2023-02-14T00:43:45Z",
+          "comments": []
+        }
+      ]
+    }
+  ]
+}
