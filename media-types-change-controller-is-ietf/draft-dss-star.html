@@ -16,11 +16,11 @@ this document we describe STAR, an efficient and secure threshold aggregation
 protocol for collecting measurements from clients by an untrusted aggregation
 server, while maintaining K-anonymity guarantees. 
     " name="description">
-<meta content="xml2rfc 3.16.0" name="generator">
+<meta content="xml2rfc 3.17.0" name="generator">
 <meta content="draft-dss-star-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.16.0
-    Python 3.10.9
+  xml2rfc 3.17.0
+    Python 3.10.10
     appdirs 1.4.4
     ConfigArgParse 1.5.3
     google-i18n-address 2.5.2
@@ -365,7 +365,7 @@ ul.empty li, .ulEmpty li {
   margin-top: 0.5em;
 }
 :is(ul, ol).compact, .ulCompact, .olCompact {
-  line-height: 100%;
+  line-height: 1;
   margin: 0 0 0 2em;
 }
 
@@ -375,9 +375,12 @@ dl {
   --indent: 3ch;
   /* --indent: attr(indent ch); not supported in any browser, but we can dream */
 }
+dl.olPercent {
+  --indent: 5ch;
+}
 dl > dt {
   float: left;
-  margin-right: 1em;
+  margin-right: 2ch;
   min-width: 8ch;
 }
 dl.dlNewline > dt {
@@ -387,6 +390,9 @@ dl > dd {
   margin-bottom: .8em;
   margin-left: var(--indent) !important; /* stupid element overrides */
   min-height: 2ex;
+}
+dl.olPercent > dt {
+  min-width: calc(var(--indent) - 2ch);
 }
 :is(dl.compact, .dlCompact) > dd {
   margin-bottom: 0;
@@ -587,10 +593,14 @@ hr {
 .bcp14 {
   font-variant: small-caps;
   font-weight: 600;
-  font-size: 14.5px;
+  font-size: var(--small-font-size);
 }
 .role {
   font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
 }
 
 /* info block */
@@ -1043,11 +1053,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">STAR</td>
-<td class="right">February 2023</td>
+<td class="right">March 2023</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Davidson, et al.</td>
-<td class="center">Expires 17 August 2023</td>
+<td class="center">Expires 24 September 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1060,12 +1070,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-dss-star-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2023-02-13" class="published">13 February 2023</time>
+<time datetime="2023-03-23" class="published">23 March 2023</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2023-08-17">17 August 2023</time></dd>
+<dd class="expires"><time datetime="2023-09-24">24 September 2023</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1115,7 +1125,7 @@ server, while maintaining K-anonymity guarantees.<a href="#section-abstract-1" c
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 17 August 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 24 September 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1662,7 +1672,7 @@ def Verify(share, commitment):
 <p id="section-3.2-1">A Verifiable Oblivious Pseudorandom Function (VOPRF) is a two-party protocol between client and
 server for computing a PRF such that the client learns the PRF output and neither party learns
 the input of the other. This specification depends on the prime-order VOPRF construction specified
-in <span>[<a href="#OPRF" class="cite xref">OPRF</a>]</span>, draft version -10, using the VOPRF mode (0x01) from <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-3.1" class="relref">Section 3.1</a></span>.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+in <span>[<a href="#OPRF" class="cite xref">OPRF</a>]</span>, draft version -10, using the VOPRF mode (0x01) from <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21#section-3.1" class="relref">Section 3.1</a></span>.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
 <p id="section-3.2-2">The following VOPRF client functions are used:<a href="#section-3.2-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3.2-3.1">Blind(element): Create and output (<code>blind</code>, <code>blinded_element</code>), consisting of a blinded
@@ -1678,10 +1688,10 @@ yielding output <code>oprf_output</code> or an error upon failure.<a href="#sect
 <ul class="normal">
 <li class="normal" id="section-3.2-5.1">BlindEvaluate(k, blinded_element): Evaluate blinded input element <code>blinded_element</code> using
 input key <code>k</code>, yielding output element <code>evaluated_element</code> and proof <code>proof</code>. This is equivalent to
-the Evaluate function described in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-3.3.1" class="relref">Section 3.3.1</a></span>, where <code>k</code> is the private key parameter.<a href="#section-3.2-5.1" class="pilcrow">¶</a>
+the Evaluate function described in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21#section-3.3.1" class="relref">Section 3.3.1</a></span>, where <code>k</code> is the private key parameter.<a href="#section-3.2-5.1" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-3.2-5.2">DeriveKeyPair(seed, info): Derive a private and public key pair deterministically
-from a seed and info parameter, as described in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-3.2" class="relref">Section 3.2</a></span>.<a href="#section-3.2-5.2" class="pilcrow">¶</a>
+from a seed and info parameter, as described in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21#section-3.2" class="relref">Section 3.2</a></span>.<a href="#section-3.2-5.2" class="pilcrow">¶</a>
 </li>
         </ul>
 <p id="section-3.2-6">Finally, this specification makes use of the following shared functions and parameters:<a href="#section-3.2-6" class="pilcrow">¶</a></p>
@@ -1689,14 +1699,14 @@ from a seed and info parameter, as described in <span>[<a href="#OPRF" class="ci
 <li class="normal" id="section-3.2-7.1">SerializeElement(element): Map input <code>element</code> to a fixed-length byte array <code>buf</code>.<a href="#section-3.2-7.1" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-3.2-7.2">DeserializeElement(buf): Attempt to map input byte array <code>buf</code> to an OPRF group element.
-This function can raise a DeserializeError upon failure; see <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-2.1" class="relref">Section 2.1</a></span>
+This function can raise a DeserializeError upon failure; see <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21#section-2.1" class="relref">Section 2.1</a></span>
 for more details.<a href="#section-3.2-7.2" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-3.2-7.3">SerializeScalar(scalar): Map input <code>scalar</code> to a unique byte array buf of fixed
 length Nscalar bytes.<a href="#section-3.2-7.3" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-3.2-7.4">DeserializeScalar(buf): Attempt to map input byte array <code>buf</code> to an OPRF scalar element.
-This function raise a DeserializeError upon failure; see <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-2.1" class="relref">Section 2.1</a></span>
+This function raise a DeserializeError upon failure; see <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21#section-2.1" class="relref">Section 2.1</a></span>
 for more details.<a href="#section-3.2-7.4" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-3.2-7.5">Nscalar: The size of a serialized OPRF scalar element output from SerializeScalar.<a href="#section-3.2-7.5" class="pilcrow">¶</a>
@@ -1704,8 +1714,8 @@ for more details.<a href="#section-3.2-7.4" class="pilcrow">¶</a>
           <li class="normal" id="section-3.2-7.6">Noe: The size of a serialized OPRF group element output from SerializeElement.<a href="#section-3.2-7.6" class="pilcrow">¶</a>
 </li>
         </ul>
-<p id="section-3.2-8">This specification uses the verifiable OPRF from <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-3" class="relref">Section 3</a></span> with the
-OPRF(ristretto255, SHA-512) as defined in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20#section-4.1.1" class="relref">Section 4.1.1</a></span>.<a href="#section-3.2-8" class="pilcrow">¶</a></p>
+<p id="section-3.2-8">This specification uses the verifiable OPRF from <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21#section-3" class="relref">Section 3</a></span> with the
+OPRF(ristretto255, SHA-512) as defined in <span>[<a href="#OPRF" class="cite xref">OPRF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21#section-4.1.1" class="relref">Section 4.1.1</a></span>.<a href="#section-3.2-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="deps-kdf">
@@ -2582,7 +2592,7 @@ in this section for all media types listed above.<a href="#section-8.1-5" class=
             <dd class="break"></dd>
 <dt id="section-8.1.1-1.31">Change controller:</dt>
             <dd style="margin-left: 1.5em" id="section-8.1.1-1.32">
-              <p id="section-8.1.1-1.32.1">IESG<a href="#section-8.1.1-1.32.1" class="pilcrow">¶</a></p>
+              <p id="section-8.1.1-1.32.1">IETF<a href="#section-8.1.1-1.32.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
@@ -2688,7 +2698,7 @@ in this section for all media types listed above.<a href="#section-8.1-5" class=
             <dd class="break"></dd>
 <dt id="section-8.1.2-1.31">Change controller:</dt>
             <dd style="margin-left: 1.5em" id="section-8.1.2-1.32">
-              <p id="section-8.1.2-1.32.1">IESG<a href="#section-8.1.2-1.32.1" class="pilcrow">¶</a></p>
+              <p id="section-8.1.2-1.32.1">IETF<a href="#section-8.1.2-1.32.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
@@ -2794,7 +2804,7 @@ in this section for all media types listed above.<a href="#section-8.1-5" class=
             <dd class="break"></dd>
 <dt id="section-8.1.3-1.31">Change controller:</dt>
             <dd style="margin-left: 1.5em" id="section-8.1.3-1.32">
-              <p id="section-8.1.3-1.32.1">IESG<a href="#section-8.1.3-1.32.1" class="pilcrow">¶</a></p>
+              <p id="section-8.1.3-1.32.1">IETF<a href="#section-8.1.3-1.32.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
@@ -2831,7 +2841,7 @@ in this section for all media types listed above.<a href="#section-8.1-5" class=
 <dd class="break"></dd>
 <dt id="OPRF">[OPRF]</dt>
         <dd>
-<span class="refAuthor">Davidson, A.</span>, <span class="refAuthor">Faz-Hernandez, A.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious Pseudorandom Functions (OPRFs) using Prime-Order Groups"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-voprf-20</span>, <time datetime="2023-02-02" class="refDate">2 February 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-20</a>&gt;</span>. </dd>
+<span class="refAuthor">Davidson, A.</span>, <span class="refAuthor">Faz-Hernandez, A.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious Pseudorandom Functions (OPRFs) using Prime-Order Groups"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-voprf-21</span>, <time datetime="2023-02-21" class="refDate">21 February 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf-21</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
         <dd>
@@ -2862,7 +2872,7 @@ in this section for all media types listed above.<a href="#section-8.1-5" class=
 <dd class="break"></dd>
 <dt id="OHTTP">[OHTTP]</dt>
         <dd>
-<span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious HTTP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-ohai-ohttp-06</span>, <time datetime="2022-12-15" class="refDate">15 December 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-ohai-ohttp-06">https://datatracker.ietf.org/doc/html/draft-ietf-ohai-ohttp-06</a>&gt;</span>. </dd>
+<span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious HTTP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-ohai-ohttp-08</span>, <time datetime="2023-03-15" class="refDate">15 March 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-ohai-ohttp-08">https://datatracker.ietf.org/doc/html/draft-ietf-ohai-ohttp-08</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="Poplar">[Poplar]</dt>
         <dd>
