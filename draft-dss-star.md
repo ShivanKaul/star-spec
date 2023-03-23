@@ -1069,7 +1069,7 @@ Author:
 
 Change controller:
 
-: IESG
+: IETF
 
 ### "application/star-report" media type
 
@@ -1140,7 +1140,7 @@ Author:
 
 Change controller:
 
-: IESG
+: IETF
 
 ### "application/star-randomness-response" media type
 
@@ -1211,7 +1211,7 @@ Author:
 
 Change controller:
 
-: IESG
+: IETF
 
 --- back
 
