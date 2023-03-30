@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-03-26T00:01:55.039481+00:00",
+  "timestamp": "2023-03-30T00:01:34.128276+00:00",
   "repo": "ShivanKaul/star-spec",
   "labels": [
     {
@@ -542,6 +542,86 @@
       "updatedAt": "2022-10-23T01:26:04Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 43,
+      "id": "I_kwDOGyWsmM5iDKVj",
+      "title": "Consider batching all reports at the proxy",
+      "url": "https://github.com/ShivanKaul/star-spec/issues/43",
+      "state": "OPEN",
+      "author": "bemasc",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Reusing OHTTP for STAR is convenient, but it creates two unnecessary weaknesses:\r\n1. A malicious aggregator who can monitor the relay's network traffic can likely identify the source IP of individual reports by timing.\r\n2. A malicious aggregator who wants to violate k-anonymity N times can stop their dictionary attack once N has been reached.\r\n\r\nIf the encrypted reports for each epoch were batched (and shuffled) at the proxy, then network traffic analysis would not reveal anything, and dictionary attacks would have to proceed without any access to the reports, presumably making them less efficient and therefore easier to detect.",
+      "createdAt": "2023-03-29T04:03:15Z",
+      "updatedAt": "2023-03-29T07:43:28Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I _think_ this has been discussed already, but I can't remember where. In any case, there are a couple of questions that come to mind:\r\n\r\n1. How does the proxy actually batch and release reports? If it batches by looking at report tags, then we've just moved the dictionary attack problem from the aggregation server to the proxy. If it batches by looking at encrypted blobs (which would be the case with unreliable OHTTP or whatever), then we're compromising the ability to verify STAR reports in a streaming fashion, making STAR closer to batch-based protocols such as Poplar. \r\n2. The fundamental assumption about OHTTP is that the gateway (the aggregation server here) cannot observe the relay's ingress link, so I'm struggling to see why this assumption would not carry over to its use for STAR.\r\n3. Since the dictionary attack only requires one query per target, it's not clear to me that batching helps improve detection, but maybe I'm misunderstanding?",
+          "createdAt": "2023-03-29T04:25:57Z",
+          "updatedAt": "2023-03-29T04:25:57Z"
+        },
+        {
+          "author": "bemasc",
+          "authorAssociation": "NONE",
+          "body": "> I _think_ this has been discussed already, but I can't remember where. In any case, there are a couple of questions that come to mind:\r\n> \r\n> 1. How does the proxy actually batch and release reports? If it batches by looking at report tags, then we've just moved the dictionary attack problem from the aggregation server to the proxy. If it batches by looking at encrypted blobs (which would be the case with unreliable OHTTP or whatever), then we're compromising the ability to verify STAR reports in a streaming fashion, making STAR closer to batch-based protocols such as Poplar.\r\n\r\nI mean the latter: each OPRF epoch is one big batch.\r\n\r\n> 2. The fundamental assumption about OHTTP is that the gateway (the aggregation server here) cannot observe the relay's ingress link, so I'm struggling to see why this assumption would not carry over to its use for STAR.\r\n\r\nThe OHTTP threat model is much weaker than, say, the DAP non-collusion assumption.  This issue is about strengthening STAR against certain attackers.\r\n\r\nAnother variation on this problem is related to aggregators who also have timing information about events that cause clients to generate reports.\r\n\r\n> 3. Since the dictionary attack only requires one query per target, it's not clear to me that batching helps improve detection, but maybe I'm misunderstanding?\r\n\r\nCurrently, the attacker can attempt to run a dictionary attack against a specific report.  The attacker can stop their attack once it succeeds.  (This attack is especially relevant if the dictionary attacker can also overcome OHTTP to link the report to a specific user.)\r\n\r\nIf the reports are batched by epoch, the attacker can't target individual reports, and doesn't know whether the attack worked at all until the end of the epoch.  Attackers might compensate by trying more values, but this is more suspicious to the Randomness Server and more likely to be detected.",
+          "createdAt": "2023-03-29T05:39:04Z",
+          "updatedAt": "2023-03-29T05:39:04Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> The OHTTP threat model is much weaker than, say, the DAP non-collusion assumption. This issue is about strengthening STAR against certain attackers.\r\n\r\nI don't agree with this. Both OHTTP and DAP require non-collusion for privacy.\r\n\r\n> Another variation on this problem is related to aggregators who also have timing information about events that cause clients to generate reports.\r\n\r\nThat's true without batching, but I'm not seeing why this timing information is helpful. Can you elaborate?\r\n\r\n> Currently, the attacker can attempt to run a dictionary attack against a specific report. The attacker can stop their attack once it succeeds. (This attack is especially relevant if the dictionary attacker can also overcome OHTTP to link the report to a specific user.)\r\n> \r\n> If the reports are batched by epoch, the attacker can't target individual reports, and doesn't know whether the attack worked at all until the end of the epoch. Attackers might compensate by trying more values, but this is more suspicious to the Randomness Server and more likely to be detected.\r\n\r\nI'm really not following this. The way a dictionary attack works is as follows:\r\n\r\n1. Attacker queries randomness server using some input and computes the corresponding tag. \r\n2. Attacker checks tag against reports it sees.\r\n\r\nWhether or not the attacker does (2) as reports or streamed in or at the end of an epoch, say, doesn't really seem like a useful distinction. Can you say why you think this distinction matters?",
+          "createdAt": "2023-03-29T05:48:52Z",
+          "updatedAt": "2023-03-29T05:48:52Z"
+        },
+        {
+          "author": "bemasc",
+          "authorAssociation": "NONE",
+          "body": "> > The OHTTP threat model is much weaker than, say, the DAP non-collusion assumption. This issue is about strengthening STAR against certain attackers.\r\n> \r\n> I don't agree with this. Both OHTTP and DAP require non-collusion for privacy.\r\n\r\nOHTTP additionally requires that the target/gateway can't learn the network traffic near the relay.  Otherwise it can likely deanonymize requests by timing correlation.\r\n\r\n(\"Unreliable OHTTP\" would enable a mitigation of this problem.)\r\n\r\n> > Another variation on this problem is related to aggregators who also have timing information about events that cause clients to generate reports.\r\n> \r\n> That's true without batching, but I'm not seeing why this timing information is helpful. Can you elaborate?\r\n\r\nIf the aggregator knows when client A sends its reports (e.g. it can trigger the client to send a report), then it can tell which reports are (likely) from client A by timing.  This is the same problem as the OHTTP timing attack, but using some application-level event instead of a network tap near the OHTTP ingress.\r\n\r\n> I'm really not following this. The way a dictionary attack works is as follows:\r\n> \r\n> 1. Attacker queries randomness server using some input and computes the corresponding tag.\r\n> 2. Attacker checks tag against reports it sees.\r\n> \r\n> Whether or not the attacker does (2) as reports or streamed in or at the end of an epoch, say, doesn't really seem like a useful distinction. Can you say why you think this distinction matters?\r\n\r\nThis is basically an argument about attack economics related to risk of discovery.\r\n\r\nConsider the following attack:\r\n1. The collected value is an element drawn uniformly at random from a well-known set of size N.\r\n1. The attacker uses network interference to prevent all users except one (the victim) from reaching the OHTTP Relay.\r\n1. The attacker runs an online dictionary attack against the victim's tag until it finds the colliding value, requiring N/2 attempts on average.\r\n\r\nIn a batch model, this dictionary attack requires N attempts every time to guarantee success.  The increased number of attempts makes the attack easier to detect.",
+          "createdAt": "2023-03-29T06:58:46Z",
+          "updatedAt": "2023-03-29T06:58:46Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks for clarifying. Taking a step back, I think it might be helpful if we write down the threat model you have in mind here, as well as what you view the ideal security properties to be with respect to that threat model. Is that something you could take a stab at?",
+          "createdAt": "2023-03-29T07:00:56Z",
+          "updatedAt": "2023-03-29T07:00:56Z"
+        },
+        {
+          "author": "bemasc",
+          "authorAssociation": "NONE",
+          "body": "In short, I am saying that STAR currently does not achieve its privacy goals in the presence of a malicious aggregator who is a Dolev-Yao attacker, or even a Pervasive Passive Attacker.  I believe it could tolerate this (i.e. adding these attacks to the threat model) with the change I described.\r\n\r\nEDIT: I'm not saying this change is necessarily worthwhile: it increases the cost of operating the proxy, adds more bespoke components, and delays access to the output.  I'm just saying it should be considered.",
+          "createdAt": "2023-03-29T07:16:40Z",
+          "updatedAt": "2023-03-29T07:18:44Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> In short, I am saying that STAR currently does not achieve its privacy goals in the presence of a malicious aggregator who is a Dolev-Yao attacker\r\n\r\nThis is making a lot of assumptions about traffic analysis and the like, right?\r\n\r\n> or even a Pervasive Passive Attacker.\r\n\r\nWhat is a pervasive passive attacker?",
+          "createdAt": "2023-03-29T07:28:19Z",
+          "updatedAt": "2023-03-29T07:28:19Z"
+        },
+        {
+          "author": "bemasc",
+          "authorAssociation": "NONE",
+          "body": "> > In short, I am saying that STAR currently does not achieve its privacy goals in the presence of a malicious aggregator who is a Dolev-Yao attacker\r\n> \r\n> This is making a lot of assumptions about traffic analysis and the like, right?\r\n\r\nNot really.  A Dolev-Yao attacker (active network attacker) has enormous flexibility to do things like drop or delay non-target traffic to ensure that the target's traffic is easy to spot by timing behavior.\r\n\r\n> > or even a Pervasive Passive Attacker.\r\n> \r\n> What is a pervasive passive attacker?\r\n\r\nI mean what RFC 7258 calls \"Pervasive Monitoring\": an attacker who can observe (but not modify) network traffic at many locations.",
+          "createdAt": "2023-03-29T07:33:35Z",
+          "updatedAt": "2023-03-29T07:33:35Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Not really. A Dolev-Yao attacker (active network attacker) has enormous flexibility to do things like drop or delay non-target traffic to ensure that the target's traffic is easy to spot by timing behavior.\r\n\r\nI see your point now. As an example, you're saying that because the DY attacker can modify with timing, then it can let the aggregation server link encrypted reports to distinct clients and, when decryption succeeds, the aggregation server learns which client sent which value. Thanks for clarifying \ud83d\udc4d I would agree with that assessment.",
+          "createdAt": "2023-03-29T07:43:28Z",
+          "updatedAt": "2023-03-29T07:43:28Z"
+        }
+      ]
     }
   ],
   "pulls": [
